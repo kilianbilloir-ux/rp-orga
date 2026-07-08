@@ -42,7 +42,7 @@
       Notifications
     </a>
     <div class="sidebar-footer">
-      <a href="login.html" class="btn btn-danger btn-block btn-sm">Déconnexion</a>
+      <button data-logout class="btn btn-danger btn-block btn-sm">Déconnexion</button>
     </div>
   </aside>
 
@@ -135,5 +135,10 @@
   </div>
 </div>
 
+
+<script type="module">
+  import { requireAuth } from "./js/auth-guard.js";
+  requireAuth();
+</script>
 </body>
 </html>
