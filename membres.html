@@ -42,7 +42,7 @@
       Notifications
     </a>
     <div class="sidebar-footer">
-      <a href="login.html" class="btn btn-danger btn-block btn-sm">Déconnexion</a>
+      <button data-logout class="btn btn-danger btn-block btn-sm">Déconnexion</button>
     </div>
   </aside>
 
@@ -62,35 +62,16 @@
         <p>Liste des membres de la communauté.</p>
       </div>
 
-      <input type="text" class="search-input" placeholder="Rechercher un membre...">
+      <input type="text" class="search-input" id="memberSearch" placeholder="Rechercher un membre...">
 
       <div class="card">
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Nom d'utilisateur</th><th>Rôle</th><th>Organisation</th><th>Dernière connexion</th></tr>
+              <tr><th>Nom d'utilisateur</th><th>Rôle</th><th>Organisation</th><th>Statut</th></tr>
             </thead>
-            <tbody>
-              <tr>
-                <td><div class="user-cell"><span class="avatar">JD</span> JohnDoe</div></td>
-                <td>Membre</td><td>LSPD</td><td>18/05/2025 - 21:45</td>
-              </tr>
-              <tr>
-                <td><div class="user-cell"><span class="avatar">SW</span> Sarah_W</div></td>
-                <td>Membre</td><td>EMS</td><td>18/05/2025 - 20:30</td>
-              </tr>
-              <tr>
-                <td><div class="user-cell"><span class="avatar">MK</span> Mike_22</div></td>
-                <td>Membre</td><td>Mechanic</td><td>18/05/2025 - 19:15</td>
-              </tr>
-              <tr>
-                <td><div class="user-cell"><span class="avatar">AR</span> AlexRP</div></td>
-                <td><span class="badge staff">Modérateur</span></td><td>Staff</td><td>18/05/2025 - 18:50</td>
-              </tr>
-              <tr>
-                <td><div class="user-cell"><span class="avatar">TV</span> TommyV</div></td>
-                <td>Membre</td><td>Lost MC</td><td>17/05/2025 - 22:10</td>
-              </tr>
+            <tbody id="membersTable">
+              <tr><td colspan="4" style="color:var(--text-2);">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -99,5 +80,47 @@
   </div>
 </div>
 
+
+<script type="module">
+  import { requireAuth } from "./js/auth-guard.js";
+  import { db, collection, onSnapshot } from "./js/firebase-init.js";
+
+  requireAuth().then(() => {
+    const tbody = document.getElementById('membersTable');
+    const searchInput = document.getElementById('memberSearch');
+    let allMembers = [];
+
+    function render() {
+      const q = searchInput.value.trim().toLowerCase();
+      const filtered = allMembers.filter(m => m.username.toLowerCase().includes(q));
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color:var(--text-2);">Aucun membre trouvé.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = filtered.map(m => {
+        const initials = m.username.slice(0, 2).toUpperCase();
+        const roleHtml = (m.role && m.role.toLowerCase() !== 'membre')
+          ? `<span class="badge staff">${m.role}</span>`
+          : (m.role || 'Membre');
+        const statusHtml = m.banned
+          ? `<span class="badge" style="background:rgba(239,68,68,0.12); color:var(--red);">Banni</span>`
+          : `<span class="badge">Actif</span>`;
+        return `<tr>
+          <td><div class="user-cell"><span class="avatar">${initials}</span> ${m.username}</div></td>
+          <td>${roleHtml}</td>
+          <td>${m.organisation || '—'}</td>
+          <td>${statusHtml}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    onSnapshot(collection(db, 'users'), (snap) => {
+      allMembers = snap.docs.map(d => d.data());
+      render();
+    });
+
+    searchInput.addEventListener('input', render);
+  });
+</script>
 </body>
 </html>
