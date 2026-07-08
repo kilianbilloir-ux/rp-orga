@@ -43,7 +43,7 @@
       Notifications
     </a>
     <div class="sidebar-footer">
-      <a href="login.html" class="btn btn-danger btn-block btn-sm">Déconnexion</a>
+      <button data-logout class="btn btn-danger btn-block btn-sm">Déconnexion</button>
     </div>
   </aside>
 
@@ -60,7 +60,7 @@
 
     <main class="page">
       <div class="page-header">
-        <h1>Bonjour, JohnDoe !</h1>
+        <h1>Bonjour, <span data-username>...</span> !</h1>
         <p>Voici un aperçu de ton activité.</p>
       </div>
 
@@ -77,13 +77,13 @@
         </div>
         <div class="stat-tile">
           <div class="label">Rôle principal</div>
-          <div class="value">Civil</div>
+          <div class="value" style="font-size:20px;" data-role>Civil</div>
           <div class="sub">Actuel</div>
         </div>
         <div class="stat-tile">
-          <div class="label">Dernière connexion</div>
-          <div class="value" style="font-size:20px;">18/05/2025</div>
-          <div class="sub">Date</div>
+          <div class="label">Organisation</div>
+          <div class="value" style="font-size:20px;" data-org>—</div>
+          <div class="sub">Actuelle</div>
         </div>
       </div>
 
@@ -119,5 +119,10 @@
   </div>
 </div>
 
+
+<script type="module">
+  import { requireAuth } from "./js/auth-guard.js";
+  requireAuth();
+</script>
 </body>
 </html>
