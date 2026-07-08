@@ -36,15 +36,17 @@
 
     <div class="field">
       <label for="pin">PIN</label>
-      <input id="pin" name="pin" type="password" inputmode="numeric" placeholder="Choisis un PIN" autocomplete="new-password" required>
+      <input id="pin" name="pin" type="password" inputmode="numeric" minlength="6" placeholder="Choisis un PIN (6 chiffres min.)" autocomplete="new-password" required>
     </div>
 
     <div class="field">
       <label for="pinConfirm">Confirmer le PIN</label>
-      <input id="pinConfirm" name="pinConfirm" type="password" inputmode="numeric" placeholder="Confirme ton PIN" autocomplete="new-password" required>
+      <input id="pinConfirm" name="pinConfirm" type="password" inputmode="numeric" minlength="6" placeholder="Confirme ton PIN" autocomplete="new-password" required>
     </div>
 
-    <button type="submit" class="btn btn-primary btn-block">Créer mon compte</button>
+    <p id="formError" style="color:#ef4444; font-size:13px; display:none; margin:-6px 0 14px;"></p>
+
+    <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Créer mon compte</button>
 
     <p class="auth-footer">
       Déjà un compte ? <a href="login.html">Se connecter</a>
@@ -52,11 +54,55 @@
   </form>
 </main>
 
-<script>
-  document.getElementById('registerForm').addEventListener('submit', (e) => {
+<script type="module">
+  import { auth, db, usernameToEmail, createUserWithEmailAndPassword, doc, setDoc, serverTimestamp } from "./js/firebase-init.js";
+
+  const form = document.getElementById('registerForm');
+  const errorEl = document.getElementById('formError');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
+  }
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    // TODO: brancher sur Firebase Auth (createUserWithEmailAndPassword ou custom backend)
-    window.location.href = 'dashboard.html';
+    errorEl.style.display = 'none';
+
+    const username = document.getElementById('username').value.trim();
+    const pin = document.getElementById('pin').value;
+    const pinConfirm = document.getElementById('pinConfirm').value;
+
+    if (username.length < 3) return showError("Le nom d'utilisateur doit faire au moins 3 caractères.");
+    if (pin.length < 6) return showError("Le PIN doit faire au moins 6 chiffres.");
+    if (pin !== pinConfirm) return showError("Les deux PIN ne correspondent pas.");
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Création...";
+
+    try {
+      const email = usernameToEmail(username);
+      const cred = await createUserWithEmailAndPassword(auth, email, pin);
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        username,
+        role: 'Membre',
+        organisation: '—',
+        banned: false,
+        createdAt: serverTimestamp(),
+      });
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Créer mon compte";
+      if (err.code === 'auth/email-already-in-use') {
+        showError("Ce nom d'utilisateur est déjà pris.");
+      } else if (err.code === 'auth/weak-password') {
+        showError("PIN trop faible (6 caractères minimum).");
+      } else {
+        showError("Erreur : " + err.message);
+      }
+    }
   });
 </script>
 </body>
