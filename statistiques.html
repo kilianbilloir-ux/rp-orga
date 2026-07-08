@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTA RP ORG — Statistiques</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">G</span> GTA RP ORG</div>
+    <a href="dashboard.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Tableau de bord
+    </a>
+    <a href="activites.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Activités
+    </a>
+    <a href="statistiques.html" class="side-link active">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+      Statistiques
+    </a>
+    <a href="membres.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Membres
+    </a>
+    <a href="comptabilite.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Comptabilité
+    </a>
+    <a href="admin.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Admin
+    </a>
+
+    <a href="notifications.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+    </a>
+    <div class="sidebar-footer">
+      <a href="login.html" class="btn btn-danger btn-block btn-sm">Déconnexion</a>
+    </div>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <span class="brand"><span class="brand-mark">G</span> GTA RP ORG</span>
+      <div></div>
+      <a href="notifications.html" class="bell" aria-label="Notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="dot"></span>
+      </a>
+    </header>
+
+    <main class="page">
+      <div class="page-header">
+        <h1>Statistiques</h1>
+        <p>Analyse de ton activité en jeu.</p>
+      </div>
+
+      <div class="stat-grid">
+        <div class="stat-tile"><div class="label">Heures totales</div><div class="value">128h</div><div class="sub"><span class="delta">+12h</span> ce mois</div></div>
+        <div class="stat-tile"><div class="label">Sessions</div><div class="value">45</div><div class="sub"><span class="delta">+5</span> ce mois</div></div>
+        <div class="stat-tile"><div class="label">Moyenne / session</div><div class="value">2h 50m</div><div class="sub"><span class="delta">+15m</span> ce mois</div></div>
+        <div class="stat-tile"><div class="label">Taux de présence</div><div class="value">75%</div><div class="sub"><span class="delta">+10%</span> ce mois</div></div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <div>
+            <h3 style="margin-bottom:2px;">Évolution des heures</h3>
+          </div>
+          <select class="search-input" style="max-width:160px; margin:0; padding:8px 12px;">
+            <option>30 derniers jours</option>
+            <option>7 derniers jours</option>
+            <option>90 derniers jours</option>
+          </select>
+        </div>
+        <svg viewBox="0 0 600 200" width="100%" height="220" preserveAspectRatio="none" style="margin-top:10px;">
+          <defs>
+            <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#22c55e" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <polyline fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
+            points="0,170 40,150 80,155 120,120 160,130 200,90 240,100 280,70 320,80 360,50 400,65 440,40 480,55 520,25 560,35 600,15"/>
+          <polygon fill="url(#areaFill)"
+            points="0,170 40,150 80,155 120,120 160,130 200,90 240,100 280,70 320,80 360,50 400,65 440,40 480,55 520,25 560,35 600,15 600,200 0,200"/>
+        </svg>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h3>Statistiques par membre</h3>
+        <p class="card-sub">Heures jouées, actions réalisées et argent rapporté.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Membre</th><th>Heures</th><th>Actions réalisées</th><th>Argent rapporté</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><div class="user-cell"><span class="avatar">JD</span> JohnDoe</div></td><td>128h</td><td>34</td><td style="color:var(--green);">$62 300</td></tr>
+              <tr><td><div class="user-cell"><span class="avatar">SW</span> Sarah_W</div></td><td>96h</td><td>28</td><td style="color:var(--green);">$41 900</td></tr>
+              <tr><td><div class="user-cell"><span class="avatar">MK</span> Mike_22</div></td><td>74h</td><td>21</td><td style="color:var(--green);">$27 150</td></tr>
+              <tr><td><div class="user-cell"><span class="avatar">AR</span> AlexRP</div></td><td>142h</td><td>39</td><td style="color:var(--green);">$78 400</td></tr>
+              <tr><td><div class="user-cell"><span class="avatar">TV</span> TommyV</div></td><td>58h</td><td>15</td><td style="color:var(--green);">$14 600</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+</body>
+</html>
