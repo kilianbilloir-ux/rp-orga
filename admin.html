@@ -42,7 +42,7 @@
       Notifications
     </a>
     <div class="sidebar-footer">
-      <a href="login.html" class="btn btn-danger btn-block btn-sm">Déconnexion</a>
+      <button data-logout class="btn btn-danger btn-block btn-sm">Déconnexion</button>
     </div>
   </aside>
 
@@ -62,129 +62,103 @@
         <p>Gestion des comptes de la communauté. Accès réservé au staff.</p>
       </div>
 
-      <input type="text" class="search-input" placeholder="Rechercher un membre...">
+      <input type="text" class="search-input" id="adminSearch" placeholder="Rechercher un membre...">
 
       <div class="card">
         <div class="table-wrap">
           <table>
             <thead>
-              <tr><th>Membre</th><th>Rôle</th><th>Statut</th><th>Dernière connexion</th><th>Actions</th></tr>
+              <tr><th>Membre</th><th>Rôle</th><th>Statut</th><th>Actions</th></tr>
             </thead>
             <tbody id="adminTable">
-              <tr data-row>
-                <td><div class="user-cell"><span class="avatar">JD</span> JohnDoe</div></td>
-                <td>Membre</td>
-                <td><span class="badge" data-status>Actif</span></td>
-                <td>18/05/2025 - 21:45</td>
-                <td>
-                  <div style="display:flex; gap:6px;">
-                    <button class="btn btn-secondary btn-sm" data-action="pin">Réinit. PIN</button>
-                    <button class="btn btn-secondary btn-sm" data-action="ban">Bannir</button>
-                    <button class="btn btn-danger btn-sm" data-action="delete">Supprimer</button>
-                  </div>
-                </td>
-              </tr>
-              <tr data-row>
-                <td><div class="user-cell"><span class="avatar">SW</span> Sarah_W</div></td>
-                <td>Membre</td>
-                <td><span class="badge" data-status>Actif</span></td>
-                <td>18/05/2025 - 20:30</td>
-                <td>
-                  <div style="display:flex; gap:6px;">
-                    <button class="btn btn-secondary btn-sm" data-action="pin">Réinit. PIN</button>
-                    <button class="btn btn-secondary btn-sm" data-action="ban">Bannir</button>
-                    <button class="btn btn-danger btn-sm" data-action="delete">Supprimer</button>
-                  </div>
-                </td>
-              </tr>
-              <tr data-row>
-                <td><div class="user-cell"><span class="avatar">AR</span> AlexRP</div></td>
-                <td><span class="badge staff">Modérateur</span></td>
-                <td><span class="badge" data-status>Actif</span></td>
-                <td>18/05/2025 - 18:50</td>
-                <td>
-                  <div style="display:flex; gap:6px;">
-                    <button class="btn btn-secondary btn-sm" data-action="pin">Réinit. PIN</button>
-                    <button class="btn btn-secondary btn-sm" data-action="ban">Bannir</button>
-                    <button class="btn btn-danger btn-sm" data-action="delete">Supprimer</button>
-                  </div>
-                </td>
-              </tr>
-              <tr data-row>
-                <td><div class="user-cell"><span class="avatar">TV</span> TommyV</div></td>
-                <td>Membre</td>
-                <td><span class="badge" style="background:rgba(239,68,68,0.12); color:var(--red);" data-status>Banni</span></td>
-                <td>10/05/2025 - 14:10</td>
-                <td>
-                  <div style="display:flex; gap:6px;">
-                    <button class="btn btn-secondary btn-sm" data-action="pin">Réinit. PIN</button>
-                    <button class="btn btn-secondary btn-sm" data-action="unban">Débannir</button>
-                    <button class="btn btn-danger btn-sm" data-action="delete">Supprimer</button>
-                  </div>
-                </td>
-              </tr>
+              <tr><td colspan="4" style="color:var(--text-2);">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div class="card" style="margin-top:20px; max-width:420px;">
-        <h3>Changer un mot de passe / PIN</h3>
-        <p class="card-sub">Réinitialise le PIN d'un membre.</p>
-        <div class="field">
-          <label for="adminUser">Membre</label>
-          <input id="adminUser" type="text" placeholder="Nom d'utilisateur">
-        </div>
-        <div class="field">
-          <label for="newPin">Nouveau PIN</label>
-          <input id="newPin" type="password" inputmode="numeric" placeholder="Nouveau PIN">
-        </div>
-        <button class="btn btn-primary btn-block" id="resetPinBtn">Mettre à jour le PIN</button>
+      <div class="card" style="margin-top:20px; max-width:520px;">
+        <h3>Note sur le PIN et la suppression</h3>
+        <p class="card-sub" style="margin-bottom:0;">
+          Pour des raisons de sécurité, Firebase ne permet pas de changer le PIN ou de supprimer
+          le compte de connexion (Auth) d'un autre membre directement depuis le site.
+          "Supprimer" ici retire le membre de la liste et de l'organisation ; pour supprimer
+          complètement son accès de connexion, il faut aller dans la console Firebase →
+          Authentication, et supprimer l'utilisateur correspondant à la main.
+        </p>
       </div>
-
-      <script>
-        document.querySelectorAll('#adminTable [data-action]').forEach(btn => {
-          btn.addEventListener('click', () => {
-            const row = btn.closest('tr');
-            const action = btn.dataset.action;
-            const statusEl = row.querySelector('[data-status]');
-            const name = row.querySelector('.user-cell').textContent.trim();
-
-            if (action === 'ban') {
-              if (!confirm(`Bannir ${name} ?`)) return;
-              statusEl.textContent = 'Banni';
-              statusEl.style.background = 'rgba(239,68,68,0.12)';
-              statusEl.style.color = 'var(--red)';
-              btn.textContent = 'Débannir';
-              btn.dataset.action = 'unban';
-            } else if (action === 'unban') {
-              statusEl.textContent = 'Actif';
-              statusEl.style.background = '';
-              statusEl.style.color = '';
-              btn.textContent = 'Bannir';
-              btn.dataset.action = 'ban';
-            } else if (action === 'delete') {
-              if (!confirm(`Supprimer définitivement le compte de ${name} ?`)) return;
-              row.remove();
-            } else if (action === 'pin') {
-              alert(`PIN de ${name} réinitialisé. Un nouveau PIN temporaire a été généré.`);
-            }
-            // TODO: brancher ces actions sur Firebase (Cloud Functions + Firestore/Auth admin SDK)
-          });
-        });
-
-        document.getElementById('resetPinBtn').addEventListener('click', () => {
-          const user = document.getElementById('adminUser').value;
-          const pin = document.getElementById('newPin').value;
-          if (!user || !pin) { alert('Renseigne un membre et un nouveau PIN.'); return; }
-          alert(`PIN de ${user} mis à jour.`);
-          document.getElementById('adminUser').value = '';
-          document.getElementById('newPin').value = '';
-        });
-      </script>
     </main>
   </div>
 </div>
 
+
+<script type="module">
+  import { requireAuth } from "./js/auth-guard.js";
+  import { db, collection, onSnapshot, doc, updateDoc, deleteDoc } from "./js/firebase-init.js";
+
+  requireAuth().then(() => {
+    const tbody = document.getElementById('adminTable');
+    const searchInput = document.getElementById('adminSearch');
+    let allMembers = [];
+
+    function render() {
+      const q = searchInput.value.trim().toLowerCase();
+      const filtered = allMembers.filter(m => m.username.toLowerCase().includes(q));
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="color:var(--text-2);">Aucun membre trouvé.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = filtered.map(m => {
+        const initials = m.username.slice(0, 2).toUpperCase();
+        const roleHtml = (m.role && m.role.toLowerCase() !== 'membre')
+          ? `<span class="badge staff">${m.role}</span>`
+          : (m.role || 'Membre');
+        const statusHtml = m.banned
+          ? `<span class="badge" style="background:rgba(239,68,68,0.12); color:var(--red);">Banni</span>`
+          : `<span class="badge">Actif</span>`;
+        const banBtn = m.banned
+          ? `<button class="btn btn-secondary btn-sm" data-action="unban" data-uid="${m.uid}">Débannir</button>`
+          : `<button class="btn btn-secondary btn-sm" data-action="ban" data-uid="${m.uid}">Bannir</button>`;
+        return `<tr>
+          <td><div class="user-cell"><span class="avatar">${initials}</span> ${m.username}</div></td>
+          <td>${roleHtml}</td>
+          <td>${statusHtml}</td>
+          <td>
+            <div style="display:flex; gap:6px;">
+              ${banBtn}
+              <button class="btn btn-danger btn-sm" data-action="delete" data-uid="${m.uid}">Supprimer</button>
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+
+      tbody.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const uid = btn.dataset.uid;
+          const action = btn.dataset.action;
+          const member = allMembers.find(m => m.uid === uid);
+          if (!member) return;
+
+          if (action === 'ban') {
+            if (!confirm(`Bannir ${member.username} ?`)) return;
+            await updateDoc(doc(db, 'users', uid), { banned: true });
+          } else if (action === 'unban') {
+            await updateDoc(doc(db, 'users', uid), { banned: false });
+          } else if (action === 'delete') {
+            if (!confirm(`Supprimer le profil de ${member.username} ? Cette action est irréversible.`)) return;
+            await deleteDoc(doc(db, 'users', uid));
+          }
+        });
+      });
+    }
+
+    onSnapshot(collection(db, 'users'), (snap) => {
+      allMembers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
+      render();
+    });
+
+    searchInput.addEventListener('input', render);
+  });
+</script>
 </body>
 </html>
