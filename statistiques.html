@@ -125,5 +125,41 @@
   requireAuth();
 </script>
 <script src="js/mobile-nav.js"></script>
+<script type="module">
+import { db, collection, onSnapshot } from "./js/firebase-init.js";
+
+const tableau = document.getElementById("table-membres");
+
+onSnapshot(collection(db, "membres"), (snapshot) => {
+
+  tableau.innerHTML = "";
+
+  snapshot.forEach((doc) => {
+
+    const membre = doc.data();
+
+    tableau.innerHTML += `
+      <tr>
+        <td>
+          <div class="user-cell">
+            <span class="avatar">${membre.pseudo.substring(0,2).toUpperCase()}</span>
+            ${membre.pseudo}
+          </div>
+        </td>
+
+        <td>${membre.heures || 0}h</td>
+
+        <td>${membre.actions || 0}</td>
+
+        <td style="color:var(--green);">
+          $${membre.argent || 0}
+        </td>
+      </tr>
+    `;
+
+  });
+
+});
+</script>
 </body>
 </html>
