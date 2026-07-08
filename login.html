@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTA RP ORG — Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="navbar">
+  <a href="index.html" class="brand"><span class="brand-mark">G</span> GTA RP ORG</a>
+  <nav>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="index.html#apropos">À propos</a></li>
+      <li><a href="index.html#fonctionnalites">Fonctionnalités</a></li>
+      <li><a href="login.html" class="active">Connexion</a></li>
+    </ul>
+  </nav>
+  <div class="nav-actions">
+    <a href="register.html" class="btn btn-primary">S'inscrire</a>
+  </div>
+</header>
+
+<main class="auth-page">
+  <form class="auth-card" id="loginForm">
+    <h2>Connexion</h2>
+    <p class="auth-sub">Connecte-toi à ton compte</p>
+
+    <div class="field">
+      <label for="username">Nom d'utilisateur</label>
+      <input id="username" name="username" type="text" placeholder="Ton nom d'utilisateur" autocomplete="username" required>
+    </div>
+
+    <div class="field">
+      <label for="pin">PIN</label>
+      <input id="pin" name="pin" type="password" inputmode="numeric" placeholder="Ton PIN" autocomplete="current-password" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
+
+    <p class="auth-footer">
+      Pas encore de compte ? <a href="register.html">S'inscrire</a>
+    </p>
+  </form>
+</main>
+
+<script>
+  document.getElementById('loginForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    // TODO: brancher sur Firebase Auth (signInWithEmailAndPassword ou custom backend)
+    window.location.href = 'dashboard.html';
+  });
+</script>
+</body>
+</html>
