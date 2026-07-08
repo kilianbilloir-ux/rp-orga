@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTA RP ORG — Créer un compte</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="navbar">
+  <a href="index.html" class="brand"><span class="brand-mark">G</span> GTA RP ORG</a>
+  <nav>
+    <ul class="nav-links">
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="index.html#apropos">À propos</a></li>
+      <li><a href="index.html#fonctionnalites">Fonctionnalités</a></li>
+      <li><a href="login.html">Connexion</a></li>
+    </ul>
+  </nav>
+  <div class="nav-actions">
+    <a href="login.html" class="btn btn-secondary">Connexion</a>
+  </div>
+</header>
+
+<main class="auth-page">
+  <form class="auth-card" id="registerForm">
+    <h2>Créer un compte</h2>
+    <p class="auth-sub">Rejoins la communauté GTA RP</p>
+
+    <div class="field">
+      <label for="username">Nom d'utilisateur</label>
+      <input id="username" name="username" type="text" placeholder="Choisis ton nom" autocomplete="username" required>
+    </div>
+
+    <div class="field">
+      <label for="pin">PIN</label>
+      <input id="pin" name="pin" type="password" inputmode="numeric" placeholder="Choisis un PIN" autocomplete="new-password" required>
+    </div>
+
+    <div class="field">
+      <label for="pinConfirm">Confirmer le PIN</label>
+      <input id="pinConfirm" name="pinConfirm" type="password" inputmode="numeric" placeholder="Confirme ton PIN" autocomplete="new-password" required>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-block">Créer mon compte</button>
+
+    <p class="auth-footer">
+      Déjà un compte ? <a href="login.html">Se connecter</a>
+    </p>
+  </form>
+</main>
+
+<script>
+  document.getElementById('registerForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    // TODO: brancher sur Firebase Auth (createUserWithEmailAndPassword ou custom backend)
+    window.location.href = 'dashboard.html';
+  });
+</script>
+</body>
+</html>
