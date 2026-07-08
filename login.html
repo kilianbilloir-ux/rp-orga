@@ -39,7 +39,9 @@
       <input id="pin" name="pin" type="password" inputmode="numeric" placeholder="Ton PIN" autocomplete="current-password" required>
     </div>
 
-    <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
+    <p id="formError" style="color:#ef4444; font-size:13px; display:none; margin:-6px 0 14px;"></p>
+
+    <button type="submit" class="btn btn-primary btn-block" id="submitBtn">Se connecter</button>
 
     <p class="auth-footer">
       Pas encore de compte ? <a href="register.html">S'inscrire</a>
@@ -47,11 +49,49 @@
   </form>
 </main>
 
-<script>
-  document.getElementById('loginForm').addEventListener('submit', (e) => {
+<script type="module">
+  import { auth, db, usernameToEmail, signInWithEmailAndPassword, doc, getDoc, signOut } from "./js/firebase-init.js";
+
+  const form = document.getElementById('loginForm');
+  const errorEl = document.getElementById('formError');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.style.display = 'block';
+  }
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    // TODO: brancher sur Firebase Auth (signInWithEmailAndPassword ou custom backend)
-    window.location.href = 'dashboard.html';
+    errorEl.style.display = 'none';
+
+    const username = document.getElementById('username').value.trim();
+    const pin = document.getElementById('pin').value;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Connexion...";
+
+    try {
+      const email = usernameToEmail(username);
+      const cred = await signInWithEmailAndPassword(auth, email, pin);
+      const snap = await getDoc(doc(db, 'users', cred.user.uid));
+      if (snap.exists() && snap.data().banned) {
+        await signOut(auth);
+        showError("Ce compte a été banni.");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Se connecter";
+        return;
+      }
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Se connecter";
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        showError("Nom d'utilisateur ou PIN incorrect.");
+      } else {
+        showError("Erreur : " + err.message);
+      }
+    }
   });
 </script>
 </body>
