@@ -42,7 +42,7 @@
       Notifications
     </a>
     <div class="sidebar-footer">
-      <a href="login.html" class="btn btn-danger btn-block btn-sm">Déconnexion</a>
+      <button data-logout class="btn btn-danger btn-block btn-sm">Déconnexion</button>
     </div>
   </aside>
 
@@ -84,10 +84,6 @@
           <p class="card-sub">Vente, action RP ou autre événement à journaliser.</p>
           <form id="actionForm">
             <div class="field">
-              <label for="member">Membre</label>
-              <input id="member" type="text" placeholder="Nom du membre" required>
-            </div>
-            <div class="field">
               <label for="actionType">Type d'action</label>
               <select id="actionType" style="width:100%; padding:11px 14px; background:var(--bg-1); border:1px solid var(--border-light); border-radius:var(--radius-sm); color:var(--text-0); font-size:14px;">
                 <option>Vente</option>
@@ -116,33 +112,62 @@
           <table>
             <thead><tr><th>Membre</th><th>Action</th><th>Détails</th><th>Montant</th><th>Date</th></tr></thead>
             <tbody id="actionsTable">
-              <tr><td><div class="user-cell"><span class="avatar">JD</span> JohnDoe</div></td><td><span class="badge">Vente</span></td><td>Vente de véhicule (Buffalo S)</td><td>$18 500</td><td>18/05/2025 - 18:20</td></tr>
-              <tr><td><div class="user-cell"><span class="avatar">SW</span> Sarah_W</div></td><td><span class="badge">Action RP</span></td><td>Intervention médicale</td><td>—</td><td>18/05/2025 - 20:30</td></tr>
-              <tr><td><div class="user-cell"><span class="avatar">MK</span> Mike_22</div></td><td><span class="badge">Vente</span></td><td>Réparation véhicule</td><td>$2 300</td><td>18/05/2025 - 19:15</td></tr>
-              <tr><td><div class="user-cell"><span class="avatar">AR</span> AlexRP</div></td><td><span class="badge staff">Action RP</span></td><td>Braquage de banque</td><td>$45 000</td><td>17/05/2025 - 21:00</td></tr>
+              <tr><td colspan="5" style="color:var(--text-2);">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
       </div>
-
-      <script>
-        document.getElementById('actionForm').addEventListener('submit', function(e){
-          e.preventDefault();
-          const member = document.getElementById('member').value || '—';
-          const type = document.getElementById('actionType').value;
-          const amount = document.getElementById('amount').value;
-          const details = document.getElementById('details').value || '—';
-          const now = new Date().toLocaleString('fr-FR');
-          const row = document.createElement('tr');
-          row.innerHTML = `<td><div class="user-cell"><span class="avatar">${member.slice(0,2).toUpperCase()}</span> ${member}</div></td><td><span class="badge">${type}</span></td><td>${details}</td><td>${amount ? '$' + Number(amount).toLocaleString('fr-FR') : '—'}</td><td>${now}</td>`;
-          document.getElementById('actionsTable').prepend(row);
-          this.reset();
-          // TODO: enregistrer aussi dans Firestore (collection "actions")
-        });
-      </script>
     </main>
   </div>
 </div>
 
+
+<script type="module">
+  import { requireAuth, currentUser } from "./js/auth-guard.js";
+  import { db, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
+
+  requireAuth().then(() => {
+    const form = document.getElementById('actionForm');
+    const tbody = document.getElementById('actionsTable');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const type = document.getElementById('actionType').value;
+      const amount = document.getElementById('amount').value;
+      const details = document.getElementById('details').value || '—';
+
+      await addDoc(collection(db, 'actions'), {
+        username: currentUser.username,
+        uid: currentUser.uid,
+        type,
+        amount: amount ? Number(amount) : null,
+        details,
+        createdAt: serverTimestamp(),
+      });
+      form.reset();
+    });
+
+    const q = query(collection(db, 'actions'), orderBy('createdAt', 'desc'));
+    onSnapshot(q, (snap) => {
+      if (snap.empty) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text-2);">Aucune action enregistrée pour l\'instant.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = snap.docs.map(d => {
+        const a = d.data();
+        const initials = (a.username || '??').slice(0, 2).toUpperCase();
+        const date = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString('fr-FR') : '—';
+        const amountHtml = a.amount ? '$' + Number(a.amount).toLocaleString('fr-FR') : '—';
+        return `<tr>
+          <td><div class="user-cell"><span class="avatar">${initials}</span> ${a.username || 'Inconnu'}</div></td>
+          <td><span class="badge">${a.type}</span></td>
+          <td>${a.details}</td>
+          <td>${amountHtml}</td>
+          <td>${date}</td>
+        </tr>`;
+      }).join('');
+    });
+  });
+</script>
 </body>
 </html>
