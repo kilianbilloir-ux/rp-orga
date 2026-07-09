@@ -20,7 +20,8 @@
     <a href="activites.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       Activités
-    </a>    <a href="membres.html" class="side-link">
+    </a>
+    <a href="membres.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Membres
     </a>
@@ -87,7 +88,7 @@
 
       <div class="card" id="expenseCard" style="max-width:480px; display:none;">
         <h3>Ajouter une dépense</h3>
-        <p class="card-sub">Réservé au staff — vient en déduction du bénéfice de la semaine.</p>
+        <p class="card-sub">Réservé au staff (Admin, Modérateur, Lead, Co-Lead) — vient en déduction du bénéfice de la semaine.</p>
         <form id="expenseForm">
           <div class="field">
             <label for="expDesc">Description</label>
@@ -122,7 +123,7 @@
   import { requireAuth, currentUser } from "./js/auth-guard.js";
   import { db, collection, addDoc, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
 
-  const STAFF_ROLES = ['admin', 'administrateur', 'modérateur', 'moderateur'];
+  const FINANCE_ROLES = ['admin', 'administrateur', 'modérateur', 'moderateur', 'lead', 'co-lead', 'colead'];
   const money = (n) => '$' + Number(n || 0).toLocaleString('fr-FR');
 
   // Renvoie le dimanche 19h le plus récent (début de la semaine comptable).
@@ -137,7 +138,7 @@
 
   requireAuth().then(() => {
     const role = (currentUser.role || '').toLowerCase();
-    if (STAFF_ROLES.includes(role)) {
+    if (FINANCE_ROLES.includes(role)) {
       document.getElementById('expenseCard').style.display = 'block';
     }
 
