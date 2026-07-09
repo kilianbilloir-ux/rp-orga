@@ -20,12 +20,7 @@
     <a href="activites.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       Activités
-    </a>
-    <a href="statistiques.html" class="side-link">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
-      Statistiques
-    </a>
-    <a href="membres.html" class="side-link">
+    </a>    <a href="membres.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Membres
     </a>
@@ -70,68 +65,50 @@
       <div class="stat-grid">
         <div class="stat-tile">
           <div class="label">Argent total</div>
-          <div class="value" style="color:var(--green);">$284 750</div>
-          <div class="sub">Solde actuel de la caisse</div>
+          <div class="value" style="color:var(--green);" id="totalMoney">—</div>
+          <div class="sub">Accumulé sur le long terme</div>
         </div>
         <div class="stat-tile">
           <div class="label">Argent rapporté (AR)</div>
-          <div class="value">$412 300</div>
-          <div class="sub">Total des ventes / actions</div>
+          <div class="value" id="weeklyIncome">—</div>
+          <div class="sub">Depuis dimanche 19h</div>
         </div>
         <div class="stat-tile">
-          <div class="label">Argent dépensé</div>
-          <div class="value" style="color:var(--red);">$127 550</div>
-          <div class="sub">Achats, salaires, matériel</div>
+          <div class="label">Dépenses</div>
+          <div class="value" style="color:var(--red);" id="weeklyExpenses">—</div>
+          <div class="sub">Depuis dimanche 19h</div>
         </div>
         <div class="stat-tile">
           <div class="label">Bénéfice net</div>
-          <div class="value" style="color:var(--green);">$284 750</div>
-          <div class="sub"><span class="delta">+18%</span> ce mois</div>
+          <div class="value" id="weeklyProfit">—</div>
+          <div class="sub">Cette semaine (AR - dépenses)</div>
         </div>
       </div>
 
-      <div class="grid-2">
-        <div class="card">
-          <h3>Évolution du bénéfice</h3>
-          <p class="card-sub">30 derniers jours</p>
-          <svg viewBox="0 0 600 200" width="100%" height="220" preserveAspectRatio="none" style="margin-top:10px;">
-            <defs>
-              <linearGradient id="areaFill2" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stop-color="#22c55e" stop-opacity="0.35"/>
-                <stop offset="100%" stop-color="#22c55e" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-            <polyline fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"
-              points="0,180 40,160 80,165 120,140 160,150 200,110 240,120 280,90 320,100 360,60 400,75 440,45 480,60 520,30 560,40 600,20"/>
-            <polygon fill="url(#areaFill2)"
-              points="0,180 40,160 80,165 120,140 160,150 200,110 240,120 280,90 320,100 360,60 400,75 440,45 480,60 520,30 560,40 600,20 600,200 0,200"/>
-          </svg>
-        </div>
-
-        <div class="card">
-          <h3>Répartition des dépenses</h3>
-          <p class="card-sub">Ce mois-ci</p>
-          <ul class="activity-list">
-            <li><span class="activity-dot" style="background:var(--orange); box-shadow:none;"></span><div style="flex:1; display:flex; justify-content:space-between;"><span class="title">Salaires</span><span class="title">$62 000</span></div></li>
-            <li><span class="activity-dot" style="background:var(--blue); box-shadow:none;"></span><div style="flex:1; display:flex; justify-content:space-between;"><span class="title">Matériel / véhicules</span><span class="title">$41 200</span></div></li>
-            <li><span class="activity-dot" style="background:var(--red); box-shadow:none;"></span><div style="flex:1; display:flex; justify-content:space-between;"><span class="title">Événements</span><span class="title">$15 350</span></div></li>
-            <li><span class="activity-dot"></span><div style="flex:1; display:flex; justify-content:space-between;"><span class="title">Autres</span><span class="title">$9 000</span></div></li>
-          </ul>
-        </div>
+      <div class="card" id="expenseCard" style="max-width:480px; display:none;">
+        <h3>Ajouter une dépense</h3>
+        <p class="card-sub">Réservé au staff — vient en déduction du bénéfice de la semaine.</p>
+        <form id="expenseForm">
+          <div class="field">
+            <label for="expDesc">Description</label>
+            <input id="expDesc" type="text" placeholder="Ex : Salaires, matériel..." required>
+          </div>
+          <div class="field">
+            <label for="expAmount">Montant ($)</label>
+            <input id="expAmount" type="number" min="0" placeholder="0" required>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block">Enregistrer la dépense</button>
+        </form>
       </div>
 
       <div class="card" style="margin-top:20px;">
         <h3>Historique des transactions</h3>
-        <p class="card-sub">Entrées et sorties d'argent de l'organisation.</p>
+        <p class="card-sub">Entrées (ventes, braquages, actions) et sorties (dépenses) de l'organisation.</p>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Date</th><th>Membre</th><th>Type</th><th>Description</th><th>Montant</th></tr></thead>
-            <tbody>
-              <tr><td>18/05/2025</td><td><div class="user-cell"><span class="avatar">JD</span> JohnDoe</div></td><td><span class="badge">Entrée</span></td><td>Vente de véhicule (Buffalo S)</td><td style="color:var(--green);">+$18 500</td></tr>
-              <tr><td>18/05/2025</td><td><div class="user-cell"><span class="avatar">AR</span> AlexRP</div></td><td><span class="badge">Entrée</span></td><td>Braquage de banque</td><td style="color:var(--green);">+$45 000</td></tr>
-              <tr><td>17/05/2025</td><td>—</td><td><span class="badge staff">Sortie</span></td><td>Salaires (staff)</td><td style="color:var(--red);">-$12 000</td></tr>
-              <tr><td>17/05/2025</td><td><div class="user-cell"><span class="avatar">MK</span> Mike_22</div></td><td><span class="badge">Entrée</span></td><td>Réparation véhicule</td><td style="color:var(--green);">+$2 300</td></tr>
-              <tr><td>16/05/2025</td><td>—</td><td><span class="badge staff">Sortie</span></td><td>Achat de matériel</td><td style="color:var(--red);">-$4 800</td></tr>
+            <tbody id="txTable">
+              <tr><td colspan="5" style="color:var(--text-2);">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -142,8 +119,108 @@
 
 
 <script type="module">
-  import { requireAuth } from "./js/auth-guard.js";
-  requireAuth();
+  import { requireAuth, currentUser } from "./js/auth-guard.js";
+  import { db, collection, addDoc, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
+
+  const STAFF_ROLES = ['admin', 'administrateur', 'modérateur', 'moderateur'];
+  const money = (n) => '$' + Number(n || 0).toLocaleString('fr-FR');
+
+  // Renvoie le dimanche 19h le plus récent (début de la semaine comptable).
+  function getWeekStart(now = new Date()) {
+    const d = new Date(now);
+    const candidate = new Date(d);
+    candidate.setDate(d.getDate() - d.getDay());
+    candidate.setHours(19, 0, 0, 0);
+    if (candidate > d) candidate.setDate(candidate.getDate() - 7);
+    return candidate;
+  }
+
+  requireAuth().then(() => {
+    const role = (currentUser.role || '').toLowerCase();
+    if (STAFF_ROLES.includes(role)) {
+      document.getElementById('expenseCard').style.display = 'block';
+    }
+
+    let actions = [];
+    let expenses = [];
+
+    function tsOf(doc) {
+      return doc.createdAt?.toDate ? doc.createdAt.toDate().getTime() : 0;
+    }
+
+    function render() {
+      const weekStart = getWeekStart().getTime();
+
+      const allActionsSum = actions.reduce((s, a) => s + Number(a.amount || 0), 0);
+      const allExpensesSum = expenses.reduce((s, e) => s + Number(e.amount || 0), 0);
+      const totalMoney = allActionsSum - allExpensesSum;
+
+      const weekActionsSum = actions.filter(a => tsOf(a) >= weekStart).reduce((s, a) => s + Number(a.amount || 0), 0);
+      const weekExpensesSum = expenses.filter(e => tsOf(e) >= weekStart).reduce((s, e) => s + Number(e.amount || 0), 0);
+      const weekProfit = weekActionsSum - weekExpensesSum;
+
+      document.getElementById('totalMoney').textContent = money(totalMoney);
+      document.getElementById('weeklyIncome').textContent = money(weekActionsSum);
+      document.getElementById('weeklyExpenses').textContent = money(weekExpensesSum);
+      const profitEl = document.getElementById('weeklyProfit');
+      profitEl.textContent = money(weekProfit);
+      profitEl.style.color = weekProfit >= 0 ? 'var(--green)' : 'var(--red)';
+
+      const tx = [
+        ...actions.map(a => ({
+          ts: tsOf(a), date: a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString('fr-FR') : '—',
+          member: a.username || '—', type: 'Entrée',
+          desc: `${a.category || ''} — ${a.item || ''}`.trim(),
+          amount: Number(a.amount || 0), sign: 1,
+        })),
+        ...expenses.map(e => ({
+          ts: tsOf(e), date: e.createdAt?.toDate ? e.createdAt.toDate().toLocaleString('fr-FR') : '—',
+          member: e.username || '—', type: 'Sortie',
+          desc: e.description || '—',
+          amount: Number(e.amount || 0), sign: -1,
+        })),
+      ].sort((a, b) => b.ts - a.ts).slice(0, 20);
+
+      const tbody = document.getElementById('txTable');
+      if (tx.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text-2);">Aucune transaction pour l\'instant.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = tx.map(t => `
+        <tr>
+          <td>${t.date}</td>
+          <td>${t.member}</td>
+          <td><span class="badge${t.sign < 0 ? ' staff' : ''}">${t.type}</span></td>
+          <td>${t.desc}</td>
+          <td style="color:${t.sign > 0 ? 'var(--green)' : 'var(--red)'};">${t.sign > 0 ? '+' : '-'}${money(t.amount)}</td>
+        </tr>
+      `).join('');
+    }
+
+    onSnapshot(collection(db, 'actions'), (snap) => {
+      actions = snap.docs.map(d => d.data());
+      render();
+    });
+    onSnapshot(collection(db, 'expenses'), (snap) => {
+      expenses = snap.docs.map(d => d.data());
+      render();
+    });
+
+    const expenseForm = document.getElementById('expenseForm');
+    expenseForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const description = document.getElementById('expDesc').value.trim();
+      const amount = Number(document.getElementById('expAmount').value || 0);
+      if (!description || !amount) return;
+      await addDoc(collection(db, 'expenses'), {
+        description, amount,
+        username: currentUser.username,
+        uid: currentUser.uid,
+        createdAt: serverTimestamp(),
+      });
+      expenseForm.reset();
+    });
+  });
 </script>
 <script src="js/mobile-nav.js"></script>
 </body>
