@@ -20,10 +20,20 @@
     <a href="activites.html" class="side-link active">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       Activités
-    </a>    <a href="membres.html" class="side-link">
+    </a>
+    <a href="four.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V10l7-7 7 7v11"/><path d="M9 21v-6h6v6"/></svg>
+      Four
+    </a>
+    <a href="membres.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Membres
     </a>
+    <a href="scores.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-6"/></svg>
+      Tableau des scores
+    </a>
+
     <a href="comptabilite.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
       Comptabilité
@@ -81,6 +91,11 @@
             <select id="item" class="field-select"></select>
           </div>
 
+          <div class="field" id="qtyField" style="display:none;">
+            <label for="qty">Nombre vendu</label>
+            <input id="qty" type="number" min="1" step="1" placeholder="1">
+          </div>
+
           <div class="field">
             <label for="amount">Argent rapporté ($)</label>
             <input id="amount" type="number" min="0" placeholder="0" required>
@@ -95,9 +110,9 @@
         <p class="card-sub">Tout ce qui a été enregistré par les membres.</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Membre</th><th>Catégorie</th><th>Détail</th><th>Argent rapporté</th><th>Date</th></tr></thead>
+            <thead><tr><th>Membre</th><th>Catégorie</th><th>Détail</th><th>Qté</th><th>Argent rapporté</th><th>Date</th></tr></thead>
             <tbody id="actionsTable">
-              <tr><td colspan="5" style="color:var(--text-2);">Chargement...</td></tr>
+              <tr><td colspan="6" style="color:var(--text-2);">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -121,6 +136,8 @@
     const categorySelect = document.getElementById('category');
     const itemField = document.getElementById('itemField');
     const itemSelect = document.getElementById('item');
+    const qtyField = document.getElementById('qtyField');
+    const qtyInput = document.getElementById('qty');
     const form = document.getElementById('actionForm');
     const tbody = document.getElementById('actionsTable');
 
@@ -130,10 +147,14 @@
       if (options.length === 0) {
         itemField.style.display = 'none';
         itemSelect.innerHTML = '';
+        qtyField.style.display = 'none';
         return;
       }
       itemSelect.innerHTML = options.map(o => `<option value="${o}">${o}</option>`).join('');
       itemField.style.display = 'block';
+      // Le nombre vendu ne se demande que pour les ventes ; braquages et
+      // actions restent toujours comptés une seule fois par soumission.
+      qtyField.style.display = (cat === 'Ventes') ? 'block' : 'none';
     });
 
     form.addEventListener('submit', async (e) => {
@@ -141,6 +162,7 @@
       const category = categorySelect.value;
       const item = itemSelect.value;
       const amount = Number(document.getElementById('amount').value || 0);
+      const quantity = (category === 'Ventes') ? Number(qtyInput.value || 1) : 1;
 
       if (!category || !item) {
         alert('Choisis une catégorie et précise laquelle.');
@@ -152,18 +174,21 @@
         uid: currentUser.uid,
         category,
         item,
+        quantity,
         amount,
         createdAt: serverTimestamp(),
       });
 
       form.reset();
       itemField.style.display = 'none';
+      qtyField.style.display = 'none';
     });
+
 
     const q = query(collection(db, 'actions'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snap) => {
       if (snap.empty) {
-        tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text-2);">Aucune action enregistrée pour l\'instant.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-2);">Aucune action enregistrée pour l\'instant.</td></tr>';
         return;
       }
       tbody.innerHTML = snap.docs.map(d => {
@@ -175,6 +200,7 @@
           <td><div class="user-cell"><span class="avatar">${initials}</span> ${a.username || 'Inconnu'}</div></td>
           <td><span class="badge">${a.category}</span></td>
           <td>${a.item || '—'}</td>
+          <td>${a.quantity || 1}</td>
           <td>${amountHtml}</td>
           <td>${date}</td>
         </tr>`;
