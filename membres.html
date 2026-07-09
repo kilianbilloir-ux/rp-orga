@@ -20,9 +20,18 @@
     <a href="activites.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       Activités
-    </a>    <a href="membres.html" class="side-link active">
+    </a>
+    <a href="four.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V10l7-7 7 7v11"/><path d="M9 21v-6h6v6"/></svg>
+      Four
+    </a>
+    <a href="membres.html" class="side-link active">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Membres
+    </a>
+    <a href="scores.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-6"/></svg>
+      Tableau des scores
     </a>
     <a href="comptabilite.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
@@ -82,13 +91,33 @@
 
 
 <script type="module">
-  import { requireAuth } from "./js/auth-guard.js";
-  import { db, collection, onSnapshot } from "./js/firebase-init.js";
+  import { requireAuth, currentUser } from "./js/auth-guard.js";
+  import { db, collection, doc, updateDoc, onSnapshot } from "./js/firebase-init.js";
+
+  // Rôles que le Lead (ou l'Admin) peut attribuer depuis cette page.
+  // Le Lead ne peut jamais modifier le rôle d'un Admin, ni promouvoir quelqu'un Admin.
+  const ASSIGNABLE_ROLES = ['Recrue', 'Membre', 'Gérant Four', 'Co-Lead'];
 
   requireAuth().then(() => {
+    const role = (currentUser.role || '').toLowerCase();
+    const canEditRoles = role === 'admin' || role === 'lead';
+
     const tbody = document.getElementById('membersTable');
     const searchInput = document.getElementById('memberSearch');
     let allMembers = [];
+
+    function roleSelectHtml(m) {
+      const isTargetAdmin = (m.role || '').toLowerCase() === 'admin';
+      if (!canEditRoles || isTargetAdmin || m.uid === currentUser.uid) {
+        return (m.role && m.role.toLowerCase() !== 'membre')
+          ? `<span class="badge staff">${m.role}</span>`
+          : (m.role || 'Membre');
+      }
+      const options = ASSIGNABLE_ROLES.map(r =>
+        `<option value="${r}" ${m.role === r ? 'selected' : ''}>${r}</option>`
+      ).join('');
+      return `<select class="field-select role-select" data-uid="${m.uid}" style="padding:6px 10px; font-size:13px;">${options}</select>`;
+    }
 
     function render() {
       const q = searchInput.value.trim().toLowerCase();
@@ -99,23 +128,32 @@
       }
       tbody.innerHTML = filtered.map(m => {
         const initials = m.username.slice(0, 2).toUpperCase();
-        const roleHtml = (m.role && m.role.toLowerCase() !== 'membre')
-          ? `<span class="badge staff">${m.role}</span>`
-          : (m.role || 'Membre');
         const statusHtml = m.banned
           ? `<span class="badge" style="background:rgba(239,68,68,0.12); color:var(--red);">Banni</span>`
           : `<span class="badge">Actif</span>`;
         return `<tr>
           <td><div class="user-cell"><span class="avatar">${initials}</span> ${m.username}</div></td>
-          <td>${roleHtml}</td>
+          <td>${roleSelectHtml(m)}</td>
           <td>${m.organisation || '—'}</td>
           <td>${statusHtml}</td>
         </tr>`;
       }).join('');
+
+      tbody.querySelectorAll('.role-select').forEach(sel => {
+        sel.addEventListener('change', async () => {
+          const uid = sel.dataset.uid;
+          const newRole = sel.value;
+          try {
+            await updateDoc(doc(db, 'users', uid), { role: newRole });
+          } catch (err) {
+            alert("Impossible de changer le rôle : " + err.message);
+          }
+        });
+      });
     }
 
     onSnapshot(collection(db, 'users'), (snap) => {
-      allMembers = snap.docs.map(d => d.data());
+      allMembers = snap.docs.map(d => ({ uid: d.id, ...d.data() }));
       render();
     });
 
