@@ -21,9 +21,13 @@ import {
   collection,
   addDoc,
   query,
+  where,
+  limit,
   orderBy,
   onSnapshot,
+  getDocs,
   serverTimestamp,
+  Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -60,7 +64,11 @@ export {
   collection,
   addDoc,
   query,
+  where,
+  limit,
   orderBy,
   onSnapshot,
+  getDocs,
   serverTimestamp,
+  Timestamp,
 };
