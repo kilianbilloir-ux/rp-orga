@@ -176,9 +176,13 @@
   const FINANCE_ROLES = ['admin', 'administrateur', 'modérateur', 'moderateur', 'lead', 'co-lead', 'colead'];
   const money = (n) => '$' + Number(n || 0).toLocaleString('fr-FR');
 
-  // Seul le Cambu rapporte de l'argent "propre" ; tout le reste est de l'argent "sale".
+  // Le Cambu rapporte toujours de l'argent "propre". Pour les ventes du Four,
+  // c'est le membre qui choisit (champ "pool") au moment de la vente.
+  // Tout le reste (sans choix explicite) est considéré "sale" par défaut.
   function poolOfAction(a) {
-    return a.item === 'Cambu' ? 'clean' : 'dirty';
+    if (a.item === 'Cambu') return 'clean';
+    if (a.pool === 'clean' || a.pool === 'dirty') return a.pool;
+    return 'dirty';
   }
 
   // Renvoie le dimanche 19h le plus récent (début de la semaine comptable).
