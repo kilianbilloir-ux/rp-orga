@@ -20,12 +20,7 @@
     <a href="activites.html" class="side-link active">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       Activités
-    </a>
-    <a href="statistiques.html" class="side-link">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
-      Statistiques
-    </a>
-    <a href="membres.html" class="side-link">
+    </a>    <a href="membres.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Membres
     </a>
@@ -64,58 +59,43 @@
     <main class="page">
       <div class="page-header">
         <h1>Activités</h1>
-        <p>Journal des connexions et des actions enregistrées (ventes, actions RP...).</p>
+        <p>Enregistre les ventes, braquages et actions réalisés sur le serveur.</p>
       </div>
 
-      <div class="grid-2" style="margin-bottom:20px;">
-        <div class="card">
-          <h3>Connexions au serveur</h3>
-          <p class="card-sub">Historique des sessions des membres.</p>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Membre</th><th>Type</th><th>Date</th><th>Durée</th></tr></thead>
-              <tbody>
-                <tr><td><div class="user-cell"><span class="avatar">JD</span> JohnDoe</div></td><td><span class="badge">Connexion</span></td><td>18/05/2025 - 21:45</td><td>—</td></tr>
-                <tr><td><div class="user-cell"><span class="avatar">SW</span> Sarah_W</div></td><td><span class="badge">Déconnexion</span></td><td>18/05/2025 - 20:15</td><td>2h30</td></tr>
-                <tr><td><div class="user-cell"><span class="avatar">MK</span> Mike_22</div></td><td><span class="badge">Connexion</span></td><td>18/05/2025 - 19:00</td><td>—</td></tr>
-                <tr><td><div class="user-cell"><span class="avatar">AR</span> AlexRP</div></td><td><span class="badge">Déconnexion</span></td><td>18/05/2025 - 17:40</td><td>4h10</td></tr>
-              </tbody>
-            </table>
+      <div class="card" style="max-width:480px; margin-bottom:20px;">
+        <h3>Enregistrer une action</h3>
+        <p class="card-sub">Choisis une catégorie, puis précise laquelle.</p>
+        <form id="actionForm">
+          <div class="field">
+            <label for="category">Catégorie</label>
+            <select id="category" class="field-select">
+              <option value="">Choisir...</option>
+              <option value="Ventes">Ventes</option>
+              <option value="Braquage">Braquage</option>
+              <option value="Actions">Actions</option>
+            </select>
           </div>
-        </div>
 
-        <div class="card">
-          <h3>Enregistrer une action</h3>
-          <p class="card-sub">Vente, action RP ou autre événement à journaliser.</p>
-          <form id="actionForm">
-            <div class="field">
-              <label for="actionType">Type d'action</label>
-              <select id="actionType" style="width:100%; padding:11px 14px; background:var(--bg-1); border:1px solid var(--border-light); border-radius:var(--radius-sm); color:var(--text-0); font-size:14px;">
-                <option>Vente</option>
-                <option>Action RP</option>
-                <option>Achat</option>
-                <option>Autre</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="amount">Montant ($)</label>
-              <input id="amount" type="number" placeholder="0" min="0">
-            </div>
-            <div class="field">
-              <label for="details">Détails</label>
-              <input id="details" type="text" placeholder="Description courte">
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">Enregistrer</button>
-          </form>
-        </div>
+          <div class="field" id="itemField" style="display:none;">
+            <label for="item">Précise</label>
+            <select id="item" class="field-select"></select>
+          </div>
+
+          <div class="field">
+            <label for="amount">Argent rapporté ($)</label>
+            <input id="amount" type="number" min="0" placeholder="0" required>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">Enregistrer</button>
+        </form>
       </div>
 
       <div class="card">
-        <h3>Journal des ventes &amp; actions</h3>
-        <p class="card-sub">Toutes les actions enregistrées par les membres.</p>
+        <h3>Journal des ventes, braquages &amp; actions</h3>
+        <p class="card-sub">Tout ce qui a été enregistré par les membres.</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Membre</th><th>Action</th><th>Détails</th><th>Montant</th><th>Date</th></tr></thead>
+            <thead><tr><th>Membre</th><th>Catégorie</th><th>Détail</th><th>Argent rapporté</th><th>Date</th></tr></thead>
             <tbody id="actionsTable">
               <tr><td colspan="5" style="color:var(--text-2);">Chargement...</td></tr>
             </tbody>
@@ -131,25 +111,71 @@
   import { requireAuth, currentUser } from "./js/auth-guard.js";
   import { db, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
 
+  const ITEMS = {
+    Ventes: ["Cocaïne", "Tranq", "Meth bleue", "Weed", "Purple", "Crack", "Mexicana", "Ecstasy", "Lean", "B-magic", "Carte prépayée", "Spore X"],
+    Braquage: ["Supérette", "Fleeca", "Armurerie"],
+    Actions: ["ATM", "Cambu", "Go fast"],
+  };
+
+  // Délai (en heures) avant de pouvoir refaire la même action, par item.
+  const COOLDOWN_HOURS = {
+    "Go fast": 24,
+    "ATM": 4,
+    "Supérette": 3,
+  };
+
   requireAuth().then(() => {
+    const categorySelect = document.getElementById('category');
+    const itemField = document.getElementById('itemField');
+    const itemSelect = document.getElementById('item');
     const form = document.getElementById('actionForm');
     const tbody = document.getElementById('actionsTable');
 
+    categorySelect.addEventListener('change', () => {
+      const cat = categorySelect.value;
+      const options = ITEMS[cat] || [];
+      if (options.length === 0) {
+        itemField.style.display = 'none';
+        itemSelect.innerHTML = '';
+        return;
+      }
+      itemSelect.innerHTML = options.map(o => `<option value="${o}">${o}</option>`).join('');
+      itemField.style.display = 'block';
+    });
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const type = document.getElementById('actionType').value;
-      const amount = document.getElementById('amount').value;
-      const details = document.getElementById('details').value || '—';
+      const category = categorySelect.value;
+      const item = itemSelect.value;
+      const amount = Number(document.getElementById('amount').value || 0);
+
+      if (!category || !item) {
+        alert('Choisis une catégorie et précise laquelle.');
+        return;
+      }
 
       await addDoc(collection(db, 'actions'), {
         username: currentUser.username,
         uid: currentUser.uid,
-        type,
-        amount: amount ? Number(amount) : null,
-        details,
+        category,
+        item,
+        amount,
         createdAt: serverTimestamp(),
       });
+
+      const cooldown = COOLDOWN_HOURS[item];
+      if (cooldown) {
+        const availableAt = new Date(Date.now() + cooldown * 3600 * 1000);
+        await addDoc(collection(db, 'notifications'), {
+          type: 'cooldown',
+          uid: currentUser.uid,
+          message: `Tu pourras refaire un(e) ${item} à partir du ${availableAt.toLocaleString('fr-FR')} (${cooldown}h de délai).`,
+          createdAt: serverTimestamp(),
+        });
+      }
+
       form.reset();
+      itemField.style.display = 'none';
     });
 
     const q = query(collection(db, 'actions'), orderBy('createdAt', 'desc'));
@@ -162,11 +188,11 @@
         const a = d.data();
         const initials = (a.username || '??').slice(0, 2).toUpperCase();
         const date = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString('fr-FR') : '—';
-        const amountHtml = a.amount ? '$' + Number(a.amount).toLocaleString('fr-FR') : '—';
+        const amountHtml = '$' + Number(a.amount || 0).toLocaleString('fr-FR');
         return `<tr>
           <td><div class="user-cell"><span class="avatar">${initials}</span> ${a.username || 'Inconnu'}</div></td>
-          <td><span class="badge">${a.type}</span></td>
-          <td>${a.details}</td>
+          <td><span class="badge">${a.category}</span></td>
+          <td>${a.item || '—'}</td>
           <td>${amountHtml}</td>
           <td>${date}</td>
         </tr>`;
