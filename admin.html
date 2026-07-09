@@ -20,12 +20,7 @@
     <a href="activites.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       Activités
-    </a>
-    <a href="statistiques.html" class="side-link">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
-      Statistiques
-    </a>
-    <a href="membres.html" class="side-link">
+    </a>    <a href="membres.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Membres
     </a>
@@ -99,7 +94,7 @@
 
 <script type="module">
   import { requireAuth, currentUser } from "./js/auth-guard.js";
-  import { db, collection, onSnapshot, doc, updateDoc, deleteDoc } from "./js/firebase-init.js";
+  import { db, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp } from "./js/firebase-init.js";
 
   const STAFF_ROLES = ['admin', 'administrateur', 'modérateur', 'moderateur'];
 
@@ -156,6 +151,11 @@
           if (action === 'ban') {
             if (!confirm(`Bannir ${member.username} ?`)) return;
             await updateDoc(doc(db, 'users', uid), { banned: true });
+            await addDoc(collection(db, 'notifications'), {
+              type: 'ban',
+              message: `${member.username} a été banni.`,
+              createdAt: serverTimestamp(),
+            });
           } else if (action === 'unban') {
             await updateDoc(doc(db, 'users', uid), { banned: false });
           } else if (action === 'delete') {
