@@ -93,6 +93,13 @@
             <label for="fourAmount">Prix total ($)</label>
             <input id="fourAmount" type="number" min="0" placeholder="0" required>
           </div>
+          <div class="field">
+            <label for="fourPool">Type d'argent</label>
+            <select id="fourPool" class="field-select">
+              <option value="dirty">Sale</option>
+              <option value="clean">Propre</option>
+            </select>
+          </div>
           <button type="submit" class="btn btn-primary btn-block">Enregistrer</button>
         </form>
       </div>
@@ -102,9 +109,9 @@
         <p class="card-sub">Tout ce qui a été vendu par les membres.</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Membre</th><th>Objet</th><th>Quantité</th><th>Prix total</th><th>Date</th></tr></thead>
+            <thead><tr><th>Membre</th><th>Objet</th><th>Quantité</th><th>Caisse</th><th>Prix total</th><th>Date</th></tr></thead>
             <tbody id="fourTable">
-              <tr><td colspan="5" style="color:var(--text-2);">Chargement...</td></tr>
+              <tr><td colspan="6" style="color:var(--text-2);">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -127,6 +134,7 @@
       const item = document.getElementById('fourItem').value;
       const quantity = Number(document.getElementById('fourQty').value || 0);
       const amount = Number(document.getElementById('fourAmount').value || 0);
+      const pool = document.getElementById('fourPool').value;
 
       if (!quantity || !amount) {
         alert('Renseigne le nombre vendu et le prix total.');
@@ -140,11 +148,13 @@
         item,
         quantity,
         amount,
+        pool,
         createdAt: serverTimestamp(),
       });
 
       form.reset();
     });
+
 
     const q = query(collection(db, 'actions'), where('category', '==', 'Four'));
     onSnapshot(q, (snap) => {
@@ -154,7 +164,7 @@
         return tb - ta;
       });
       if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text-2);">Aucune vente enregistrée pour l\'instant.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-2);">Aucune vente enregistrée pour l\'instant.</td></tr>';
         return;
       }
       tbody.innerHTML = rows.map(a => {
@@ -164,6 +174,7 @@
           <td><div class="user-cell"><span class="avatar">${initials}</span> ${a.username || 'Inconnu'}</div></td>
           <td>${a.item || '—'}</td>
           <td>${a.quantity || 1}</td>
+          <td>${a.pool === 'clean' ? 'Propre' : 'Sale'}</td>
           <td>$${Number(a.amount || 0).toLocaleString('fr-FR')}</td>
           <td>${date}</td>
         </tr>`;
