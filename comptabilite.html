@@ -66,7 +66,7 @@
         <div class="stat-tile">
           <div class="label">Argent total</div>
           <div class="value" style="color:var(--green);" id="totalMoney">—</div>
-          <div class="sub">Accumulé sur le long terme</div>
+          <div class="sub">Mis à jour chaque dimanche 19h</div>
         </div>
         <div class="stat-tile">
           <div class="label">Argent rapporté (AR)</div>
@@ -151,10 +151,16 @@
     function render() {
       const weekStart = getWeekStart().getTime();
 
-      const allActionsSum = actions.reduce((s, a) => s + Number(a.amount || 0), 0);
-      const allExpensesSum = expenses.reduce((s, e) => s + Number(e.amount || 0), 0);
-      const totalMoney = allActionsSum - allExpensesSum;
+      // "Argent total" ne bouge pas en direct : il ne compte que ce qui s'est
+      // passé AVANT le début de la semaine en cours (les semaines déjà clôturées).
+      // Il se met donc à jour tout seul chaque dimanche 19h, quand une nouvelle
+      // semaine commence et que la précédente devient "du passé".
+      const pastActionsSum = actions.filter(a => tsOf(a) < weekStart).reduce((s, a) => s + Number(a.amount || 0), 0);
+      const pastExpensesSum = expenses.filter(e => tsOf(e) < weekStart).reduce((s, e) => s + Number(e.amount || 0), 0);
+      const totalMoney = pastActionsSum - pastExpensesSum;
 
+      // AR / Dépenses / Bénéfice : uniquement la semaine en cours (depuis dimanche 19h).
+      // Ça repart donc à 0 automatiquement à chaque nouveau dimanche 19h.
       const weekActionsSum = actions.filter(a => tsOf(a) >= weekStart).reduce((s, a) => s + Number(a.amount || 0), 0);
       const weekExpensesSum = expenses.filter(e => tsOf(e) >= weekStart).reduce((s, e) => s + Number(e.amount || 0), 0);
       const weekProfit = weekActionsSum - weekExpensesSum;
