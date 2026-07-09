@@ -21,12 +21,7 @@
     <a href="activites.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       Activités
-    </a>
-    <a href="statistiques.html" class="side-link">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
-      Statistiques
-    </a>
-    <a href="membres.html" class="side-link">
+    </a>    <a href="membres.html" class="side-link">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Membres
     </a>
@@ -69,15 +64,10 @@
         <p>Voici un aperçu de ton activité.</p>
       </div>
 
-      <div class="stat-grid">
+      <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr);">
         <div class="stat-tile">
           <div class="label">Heures de jeu</div>
           <div class="value">128h</div>
-          <div class="sub">Total</div>
-        </div>
-        <div class="stat-tile">
-          <div class="label">Sessions</div>
-          <div class="value">45</div>
           <div class="sub">Total</div>
         </div>
         <div class="stat-tile">
@@ -92,33 +82,12 @@
         </div>
       </div>
 
-      <div class="grid-2">
-        <div class="card">
-          <h3>Activité récente</h3>
-          <p class="card-sub">Tes dernières actions sur le serveur.</p>
-          <ul class="activity-list">
-            <li><span class="activity-dot"></span><div><div class="title">Connexion au serveur</div><div class="time">18/05/2025 - 21:45</div></div></li>
-            <li><span class="activity-dot"></span><div><div class="title">Participation à un événement</div><div class="time">18/05/2025 - 20:30</div></div></li>
-            <li><span class="activity-dot"></span><div><div class="title">Rejoint une organisation : LSPD</div><div class="time">18/05/2025 - 19:15</div></div></li>
-            <li><span class="activity-dot"></span><div><div class="title">Déconnexion du serveur</div><div class="time">18/05/2025 - 18:20</div></div></li>
-          </ul>
-        </div>
-
-        <div class="card">
-          <h3>Progression</h3>
-          <p class="card-sub">Ton niveau d'activité ce mois-ci.</p>
-          <div class="progress-ring-wrap">
-            <svg width="150" height="150" viewBox="0 0 150 150">
-              <circle cx="75" cy="75" r="62" fill="none" stroke="#232823" stroke-width="12"/>
-              <circle cx="75" cy="75" r="62" fill="none" stroke="#22c55e" stroke-width="12"
-                stroke-linecap="round" stroke-dasharray="389.6" stroke-dashoffset="97.4"
-                transform="rotate(-90 75 75)"/>
-              <text x="75" y="70" text-anchor="middle" class="pct">75%</text>
-              <text x="75" y="90" text-anchor="middle" fill="#7d867d" font-size="11" font-family="Inter">ACTIF</text>
-            </svg>
-            <div class="status">Continue comme ça ! <strong>+5%</strong> ce mois</div>
-          </div>
-        </div>
+      <div class="card">
+        <h3>Activité récente</h3>
+        <p class="card-sub">Nouveaux membres, ventes et braquages réalisés sur le serveur.</p>
+        <ul class="activity-list" id="recentActivity">
+          <li><span class="activity-dot"></span><div><div class="title">Chargement...</div></div></li>
+        </ul>
       </div>
     </main>
   </div>
@@ -127,7 +96,64 @@
 
 <script type="module">
   import { requireAuth } from "./js/auth-guard.js";
-  requireAuth();
+  import { db, collection, query, orderBy, limit, onSnapshot } from "./js/firebase-init.js";
+
+  requireAuth().then(() => {
+    const list = document.getElementById('recentActivity');
+    let joins = [];
+    let actions = [];
+
+    function render() {
+      const items = [...joins, ...actions]
+        .sort((a, b) => (b.ts || 0) - (a.ts || 0))
+        .slice(0, 8);
+
+      if (items.length === 0) {
+        list.innerHTML = '<li><span class="activity-dot"></span><div><div class="title">Aucune activité pour l\'instant.</div></div></li>';
+        return;
+      }
+
+      list.innerHTML = items.map(it => `
+        <li>
+          <span class="activity-dot"></span>
+          <div>
+            <div class="title">${it.title}</div>
+            <div class="time">${it.date}</div>
+          </div>
+        </li>
+      `).join('');
+    }
+
+    function fmt(ts) {
+      return ts ? new Date(ts).toLocaleString('fr-FR') : '—';
+    }
+
+    onSnapshot(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(8)), (snap) => {
+      joins = snap.docs.map(d => {
+        const u = d.data();
+        const ts = u.createdAt?.toDate ? u.createdAt.toDate().getTime() : 0;
+        return { ts, date: fmt(ts), title: `${u.username} a rejoint les Égarés` };
+      });
+      render();
+    });
+
+    onSnapshot(query(collection(db, 'actions'), orderBy('createdAt', 'desc'), limit(8)), (snap) => {
+      actions = snap.docs.map(d => {
+        const a = d.data();
+        const ts = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+        let title;
+        if (a.category === 'Braquage') {
+          title = `${a.username} a réalisé un braquage (${a.item}) — $${Number(a.amount || 0).toLocaleString('fr-FR')}`;
+        } else if (a.category === 'Ventes') {
+          title = `${a.username} a réalisé une vente de ${a.item} — $${Number(a.amount || 0).toLocaleString('fr-FR')}`;
+        } else {
+          title = `${a.username} a réalisé une action (${a.item}) — $${Number(a.amount || 0).toLocaleString('fr-FR')}`;
+        }
+        return { ts, date: fmt(ts), title };
+      });
+      render();
+    });
+  });
 </script>
 <script src="js/mobile-nav.js"></script>
 </body>
