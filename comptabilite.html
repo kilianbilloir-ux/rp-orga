@@ -1,3 +1,4 @@
+cat > /home/claude/site/comptabilite.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -60,35 +61,68 @@
     <main class="page">
       <div class="page-header">
         <h1>Comptabilité</h1>
-        <p>Vue d'ensemble des finances de l'organisation.</p>
+        <p>Vue d'ensemble des finances de l'organisation — argent sale (tout sauf Cambu) et argent propre (Cambu uniquement).</p>
       </div>
 
-      <div class="stat-grid">
+      <h3 style="margin-bottom:10px;">Argent total <span style="color:var(--text-2); font-weight:500; font-size:13px;">— mis à jour chaque dimanche 19h</span></h3>
+      <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom:24px;">
         <div class="stat-tile">
-          <div class="label">Argent total</div>
-          <div class="value" style="color:var(--green);" id="totalMoney">—</div>
-          <div class="sub">Mis à jour chaque dimanche 19h</div>
+          <div class="label">Sale</div>
+          <div class="value" style="color:var(--red);" id="totalDirty">—</div>
+          <div class="sub">Tout sauf Cambu</div>
         </div>
         <div class="stat-tile">
-          <div class="label">Argent rapporté (AR)</div>
-          <div class="value" id="weeklyIncome">—</div>
-          <div class="sub">Depuis dimanche 19h</div>
+          <div class="label">Propre</div>
+          <div class="value" style="color:var(--green);" id="totalClean">—</div>
+          <div class="sub">Cambu uniquement</div>
+        </div>
+      </div>
+
+      <h3 style="margin-bottom:10px;">Argent rapporté (AR) <span style="color:var(--text-2); font-weight:500; font-size:13px;">— depuis dimanche 19h</span></h3>
+      <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom:24px;">
+        <div class="stat-tile">
+          <div class="label">Sale</div>
+          <div class="value" id="weekDirtyIncome">—</div>
+          <div class="sub">Cette semaine</div>
         </div>
         <div class="stat-tile">
-          <div class="label">Dépenses</div>
-          <div class="value" style="color:var(--red);" id="weeklyExpenses">—</div>
-          <div class="sub">Depuis dimanche 19h</div>
+          <div class="label">Propre</div>
+          <div class="value" id="weekCleanIncome">—</div>
+          <div class="sub">Cette semaine</div>
+        </div>
+      </div>
+
+      <h3 style="margin-bottom:10px;">Dépenses <span style="color:var(--text-2); font-weight:500; font-size:13px;">— depuis dimanche 19h</span></h3>
+      <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom:24px;">
+        <div class="stat-tile">
+          <div class="label">Sale</div>
+          <div class="value" style="color:var(--red);" id="weekDirtyExpenses">—</div>
+          <div class="sub">Cette semaine</div>
         </div>
         <div class="stat-tile">
-          <div class="label">Bénéfice net</div>
-          <div class="value" id="weeklyProfit">—</div>
-          <div class="sub">Cette semaine (AR - dépenses)</div>
+          <div class="label">Propre</div>
+          <div class="value" style="color:var(--red);" id="weekCleanExpenses">—</div>
+          <div class="sub">Cette semaine</div>
+        </div>
+      </div>
+
+      <h3 style="margin-bottom:10px;">Bénéfice net <span style="color:var(--text-2); font-weight:500; font-size:13px;">— cette semaine (AR − dépenses)</span></h3>
+      <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom:24px;">
+        <div class="stat-tile">
+          <div class="label">Sale</div>
+          <div class="value" id="weekDirtyProfit">—</div>
+          <div class="sub">Cette semaine</div>
+        </div>
+        <div class="stat-tile">
+          <div class="label">Propre</div>
+          <div class="value" id="weekCleanProfit">—</div>
+          <div class="sub">Cette semaine</div>
         </div>
       </div>
 
       <div class="card" id="expenseCard" style="max-width:480px; display:none;">
         <h3>Ajouter une dépense</h3>
-        <p class="card-sub">Réservé au staff (Admin, Modérateur, Lead, Co-Lead) — vient en déduction du bénéfice de la semaine.</p>
+        <p class="card-sub">Réservé au staff (Admin, Modérateur, Lead, Co-Lead).</p>
         <form id="expenseForm">
           <div class="field">
             <label for="expDesc">Description</label>
@@ -97,6 +131,13 @@
           <div class="field">
             <label for="expAmount">Montant ($)</label>
             <input id="expAmount" type="number" min="0" placeholder="0" required>
+          </div>
+          <div class="field">
+            <label for="expPool">Argent utilisé</label>
+            <select id="expPool" class="field-select">
+              <option value="dirty">Sale</option>
+              <option value="clean">Propre</option>
+            </select>
           </div>
           <button type="submit" class="btn btn-primary btn-block">Enregistrer la dépense</button>
         </form>
@@ -107,9 +148,9 @@
         <p class="card-sub">Entrées (ventes, braquages, actions) et sorties (dépenses) de l'organisation.</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Date</th><th>Membre</th><th>Type</th><th>Description</th><th>Montant</th></tr></thead>
+            <thead><tr><th>Date</th><th>Membre</th><th>Type</th><th>Description</th><th>Caisse</th><th>Montant</th></tr></thead>
             <tbody id="txTable">
-              <tr><td colspan="5" style="color:var(--text-2);">Chargement...</td></tr>
+              <tr><td colspan="6" style="color:var(--text-2);">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -125,6 +166,11 @@
 
   const FINANCE_ROLES = ['admin', 'administrateur', 'modérateur', 'moderateur', 'lead', 'co-lead', 'colead'];
   const money = (n) => '$' + Number(n || 0).toLocaleString('fr-FR');
+
+  // Seul le Cambu rapporte de l'argent "propre" ; tout le reste est de l'argent "sale".
+  function poolOfAction(a) {
+    return a.item === 'Cambu' ? 'clean' : 'dirty';
+  }
 
   // Renvoie le dimanche 19h le plus récent (début de la semaine comptable).
   function getWeekStart(now = new Date()) {
@@ -149,48 +195,67 @@
       return doc.createdAt?.toDate ? doc.createdAt.toDate().getTime() : 0;
     }
 
+    function sum(list) {
+      return list.reduce((s, x) => s + Number(x.amount || 0), 0);
+    }
+
     function render() {
       const weekStart = getWeekStart().getTime();
 
-      // "Argent total" ne bouge pas en direct : il ne compte que ce qui s'est
-      // passé AVANT le début de la semaine en cours (les semaines déjà clôturées).
-      // Il se met donc à jour tout seul chaque dimanche 19h, quand une nouvelle
-      // semaine commence et que la précédente devient "du passé".
-      const pastActionsSum = actions.filter(a => tsOf(a) < weekStart).reduce((s, a) => s + Number(a.amount || 0), 0);
-      const pastExpensesSum = expenses.filter(e => tsOf(e) < weekStart).reduce((s, e) => s + Number(e.amount || 0), 0);
-      const totalMoney = pastActionsSum - pastExpensesSum;
+      const pastActions = actions.filter(a => tsOf(a) < weekStart);
+      const pastExpenses = expenses.filter(e => tsOf(e) < weekStart);
+      const weekActions = actions.filter(a => tsOf(a) >= weekStart);
+      const weekExpenses = expenses.filter(e => tsOf(e) >= weekStart);
 
-      // AR / Dépenses / Bénéfice : uniquement la semaine en cours (depuis dimanche 19h).
-      // Ça repart donc à 0 automatiquement à chaque nouveau dimanche 19h.
-      const weekActionsSum = actions.filter(a => tsOf(a) >= weekStart).reduce((s, a) => s + Number(a.amount || 0), 0);
-      const weekExpensesSum = expenses.filter(e => tsOf(e) >= weekStart).reduce((s, e) => s + Number(e.amount || 0), 0);
-      const weekProfit = weekActionsSum - weekExpensesSum;
+      // Argent total (figé, ne compte que les semaines déjà clôturées) — sale / propre.
+      const totalDirty = sum(pastActions.filter(a => poolOfAction(a) === 'dirty'))
+        - sum(pastExpenses.filter(e => (e.pool || 'dirty') === 'dirty'));
+      const totalClean = sum(pastActions.filter(a => poolOfAction(a) === 'clean'))
+        - sum(pastExpenses.filter(e => e.pool === 'clean'));
 
-      document.getElementById('totalMoney').textContent = money(totalMoney);
-      document.getElementById('weeklyIncome').textContent = money(weekActionsSum);
-      document.getElementById('weeklyExpenses').textContent = money(weekExpensesSum);
-      const profitEl = document.getElementById('weeklyProfit');
-      profitEl.textContent = money(weekProfit);
-      profitEl.style.color = weekProfit >= 0 ? 'var(--green)' : 'var(--red)';
+      // Cette semaine — sale / propre.
+      const weekDirtyIncome = sum(weekActions.filter(a => poolOfAction(a) === 'dirty'));
+      const weekCleanIncome = sum(weekActions.filter(a => poolOfAction(a) === 'clean'));
+      const weekDirtyExpenses = sum(weekExpenses.filter(e => (e.pool || 'dirty') === 'dirty'));
+      const weekCleanExpenses = sum(weekExpenses.filter(e => e.pool === 'clean'));
+      const weekDirtyProfit = weekDirtyIncome - weekDirtyExpenses;
+      const weekCleanProfit = weekCleanIncome - weekCleanExpenses;
+
+      document.getElementById('totalDirty').textContent = money(totalDirty);
+      document.getElementById('totalClean').textContent = money(totalClean);
+      document.getElementById('weekDirtyIncome').textContent = money(weekDirtyIncome);
+      document.getElementById('weekCleanIncome').textContent = money(weekCleanIncome);
+      document.getElementById('weekDirtyExpenses').textContent = money(weekDirtyExpenses);
+      document.getElementById('weekCleanExpenses').textContent = money(weekCleanExpenses);
+
+      const dirtyProfitEl = document.getElementById('weekDirtyProfit');
+      dirtyProfitEl.textContent = money(weekDirtyProfit);
+      dirtyProfitEl.style.color = weekDirtyProfit >= 0 ? 'var(--green)' : 'var(--red)';
+
+      const cleanProfitEl = document.getElementById('weekCleanProfit');
+      cleanProfitEl.textContent = money(weekCleanProfit);
+      cleanProfitEl.style.color = weekCleanProfit >= 0 ? 'var(--green)' : 'var(--red)';
 
       const tx = [
         ...actions.map(a => ({
           ts: tsOf(a), date: a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString('fr-FR') : '—',
           member: a.username || '—', type: 'Entrée',
           desc: `${a.category || ''} — ${a.item || ''}`.trim(),
+          pool: poolOfAction(a),
           amount: Number(a.amount || 0), sign: 1,
         })),
         ...expenses.map(e => ({
           ts: tsOf(e), date: e.createdAt?.toDate ? e.createdAt.toDate().toLocaleString('fr-FR') : '—',
           member: e.username || '—', type: 'Sortie',
           desc: e.description || '—',
+          pool: e.pool || 'dirty',
           amount: Number(e.amount || 0), sign: -1,
         })),
-      ].sort((a, b) => b.ts - a.ts).slice(0, 20);
+      ].sort((a, b) => b.ts - a.ts).slice(0, 25);
 
       const tbody = document.getElementById('txTable');
       if (tx.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="color:var(--text-2);">Aucune transaction pour l\'instant.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-2);">Aucune transaction pour l\'instant.</td></tr>';
         return;
       }
       tbody.innerHTML = tx.map(t => `
@@ -199,6 +264,7 @@
           <td>${t.member}</td>
           <td><span class="badge${t.sign < 0 ? ' staff' : ''}">${t.type}</span></td>
           <td>${t.desc}</td>
+          <td>${t.pool === 'clean' ? 'Propre' : 'Sale'}</td>
           <td style="color:${t.sign > 0 ? 'var(--green)' : 'var(--red)'};">${t.sign > 0 ? '+' : '-'}${money(t.amount)}</td>
         </tr>
       `).join('');
@@ -218,9 +284,10 @@
       e.preventDefault();
       const description = document.getElementById('expDesc').value.trim();
       const amount = Number(document.getElementById('expAmount').value || 0);
+      const pool = document.getElementById('expPool').value;
       if (!description || !amount) return;
       await addDoc(collection(db, 'expenses'), {
-        description, amount,
+        description, amount, pool,
         username: currentUser.username,
         uid: currentUser.uid,
         createdAt: serverTimestamp(),
@@ -232,3 +299,5 @@
 <script src="js/mobile-nav.js"></script>
 </body>
 </html>
+HTMLEOF
+echo "written"
