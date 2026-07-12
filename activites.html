@@ -110,9 +110,9 @@
         <p class="card-sub">Tout ce qui a été enregistré par les membres.</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Membre</th><th>Catégorie</th><th>Détail</th><th>Qté</th><th>Argent rapporté</th><th>Date</th></tr></thead>
+            <thead><tr><th>Membre</th><th>Catégorie</th><th>Détail</th><th>Qté</th><th>Caisse</th><th>Argent rapporté</th><th>Date</th></tr></thead>
             <tbody id="actionsTable">
-              <tr><td colspan="6" style="color:var(--text-2);">Chargement...</td></tr>
+              <tr><td colspan="7" style="color:var(--text-2);">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -176,6 +176,7 @@
         item,
         quantity,
         amount,
+        pool: item === 'Cambu' ? 'clean' : 'dirty',
         createdAt: serverTimestamp(),
       });
 
@@ -188,7 +189,7 @@
     const q = query(collection(db, 'actions'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snap) => {
       if (snap.empty) {
-        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-2);">Aucune action enregistrée pour l\'instant.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="color:var(--text-2);">Aucune action enregistrée pour l\'instant.</td></tr>';
         return;
       }
       tbody.innerHTML = snap.docs.map(d => {
@@ -196,11 +197,13 @@
         const initials = (a.username || '??').slice(0, 2).toUpperCase();
         const date = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString('fr-FR') : '—';
         const amountHtml = '$' + Number(a.amount || 0).toLocaleString('fr-FR');
+        const pool = a.pool === 'clean' ? 'Propre' : 'Sale';
         return `<tr>
           <td><div class="user-cell"><span class="avatar">${initials}</span> ${a.username || 'Inconnu'}</div></td>
           <td><span class="badge">${a.category}</span></td>
           <td>${a.item || '—'}</td>
           <td>${a.quantity || 1}</td>
+          <td>${pool}</td>
           <td>${amountHtml}</td>
           <td>${date}</td>
         </tr>`;
