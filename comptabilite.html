@@ -73,7 +73,7 @@
         <p>Vue d'ensemble des finances de l'organisation — argent sale (tout sauf Cambu) et argent propre (Cambu uniquement).</p>
       </div>
 
-      <h3 style="margin-bottom:10px;">Argent total <span style="color:var(--text-2); font-weight:500; font-size:13px;">— mis à jour chaque dimanche 19h</span></h3>
+      <h3 style="margin-bottom:10px;">Argent total <span style="color:var(--text-2); font-weight:500; font-size:13px;">— mis à jour en direct</span></h3>
       <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom:24px;">
         <div class="stat-tile">
           <div class="label">Sale</div>
@@ -215,16 +215,14 @@
     function render() {
       const weekStart = getWeekStart().getTime();
 
-      const pastActions = actions.filter(a => tsOf(a) < weekStart);
-      const pastExpenses = expenses.filter(e => tsOf(e) < weekStart);
       const weekActions = actions.filter(a => tsOf(a) >= weekStart);
       const weekExpenses = expenses.filter(e => tsOf(e) >= weekStart);
 
-      // Argent total (figé, ne compte que les semaines déjà clôturées) — sale / propre.
-      const totalDirty = sum(pastActions.filter(a => poolOfAction(a) === 'dirty'))
-        - sum(pastExpenses.filter(e => (e.pool || 'dirty') === 'dirty'));
-      const totalClean = sum(pastActions.filter(a => poolOfAction(a) === 'clean'))
-        - sum(pastExpenses.filter(e => e.pool === 'clean'));
+      // Argent total — mis à jour en direct (tout l'historique), sale / propre.
+      const totalDirty = sum(actions.filter(a => poolOfAction(a) === 'dirty'))
+        - sum(expenses.filter(e => (e.pool || 'dirty') === 'dirty'));
+      const totalClean = sum(actions.filter(a => poolOfAction(a) === 'clean'))
+        - sum(expenses.filter(e => e.pool === 'clean'));
 
       // Cette semaine — sale / propre.
       const weekDirtyIncome = sum(weekActions.filter(a => poolOfAction(a) === 'dirty'));
