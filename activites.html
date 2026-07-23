@@ -127,10 +127,14 @@
   import { db, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
 
   const ITEMS = {
-    Ventes: ["Cocaïne", "Tranq", "Meth bleue", "Weed", "Purple", "Crack", "Mexicana", "Ecstasy", "Lean", "B-magic", "Carte prépayée", "Spore X"],
+    Ventes: ["Cocaïne", "Tranq", "Meth bleue", "Weed", "Purple", "Crack", "Mexicana", "Ecstasy", "Lean", "B-magic", "Carte prépayée", "Spore X", "Héroïne"],
     Braquage: ["Supérette", "Fleeca", "Armurerie"],
-    Actions: ["ATM", "Cambu", "Go fast"],
+    Actions: ["ATM", "Cambu", "Go fast", "Rentrée d'argent"],
   };
+
+  // Cet item n'est pas une vraie "activité RP" : il compte dans l'argent
+  // mais pas dans le nombre d'activités réalisées (tableau des scores).
+  const NON_ACTIVITY_ITEMS = ["Rentrée d'argent"];
 
   requireAuth().then(() => {
     const categorySelect = document.getElementById('category');
@@ -177,6 +181,7 @@
         quantity,
         amount,
         pool: item === 'Cambu' ? 'clean' : 'dirty',
+        countsAsActivity: !NON_ACTIVITY_ITEMS.includes(item),
         createdAt: serverTimestamp(),
       });
 
