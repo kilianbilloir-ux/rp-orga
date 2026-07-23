@@ -98,7 +98,8 @@
 
       const stats = users.map(u => {
         const mine = actions.filter(a => a.username === u.username);
-        const count = mine.length;
+        // "Rentrée d'argent" compte dans l'argent rapporté mais pas comme une activité.
+        const count = mine.filter(a => a.countsAsActivity !== false).length;
         const money = mine.reduce((s, a) => s + Number(a.amount || 0), 0);
         return { username: u.username, count, money };
       });
