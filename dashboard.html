@@ -158,6 +158,8 @@
           title = `${a.username} a réalisé une vente de ${a.item} — $${Number(a.amount || 0).toLocaleString('fr-FR')}`;
         } else if (a.category === 'Four') {
           title = `${a.username} a vendu ${a.quantity || 1}x ${a.item} au Four — $${Number(a.amount || 0).toLocaleString('fr-FR')}`;
+        } else if (a.item === "Rentrée d'argent") {
+          title = `${a.username} a enregistré une rentrée d'argent — $${Number(a.amount || 0).toLocaleString('fr-FR')}`;
         } else {
           title = `${a.username} a réalisé une action (${a.item}) — $${Number(a.amount || 0).toLocaleString('fr-FR')}`;
         }
