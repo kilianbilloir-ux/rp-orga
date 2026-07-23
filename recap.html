@@ -1,1 +1,180 @@
-m
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTA RP ORG — Récap hebdo</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+  <aside class="sidebar">
+    <div class="brand"><span><span class="brand-mark">G</span> GTA RP ORG</span><button class="sidebar-close" id="sidebarClose" aria-label="Fermer le menu"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg></button></div>
+    <a href="dashboard.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Tableau de bord
+    </a>
+    <a href="activites.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Activités
+    </a>
+    <a href="four.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V10l7-7 7 7v11"/><path d="M9 21v-6h6v6"/></svg>
+      Four
+    </a>
+    <a href="membres.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Membres
+    </a>
+    <a href="scores.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-6"/></svg>
+      Tableau des scores
+    </a>
+    <a href="recap.html" class="side-link active">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Récap hebdo
+    </a>
+    <a href="comptabilite.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Comptabilité
+    </a>
+    <a href="admin.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Admin
+    </a>
+
+    <a href="notifications.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+    </a>
+    <div class="sidebar-footer">
+      <button data-logout class="btn btn-danger btn-block btn-sm">Déconnexion</button>
+    </div>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Ouvrir le menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <span class="brand"><span class="brand-mark">G</span> GTA RP ORG</span>
+      </div>
+      <a href="notifications.html" class="bell" aria-label="Notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="dot"></span>
+      </a>
+    </header>
+
+    <main class="page">
+      <div class="page-header">
+        <h1>Récap hebdo</h1>
+        <p>Détail des ventes, braquages et actions de la semaine — remis à zéro chaque dimanche 19h.</p>
+      </div>
+
+      <div id="recapSections">
+        <p style="color:var(--text-2);">Chargement...</p>
+      </div>
+    </main>
+  </div>
+</div>
+
+
+<script type="module">
+  import { requireAuth } from "./js/auth-guard.js";
+  import { db, collection, onSnapshot } from "./js/firebase-init.js";
+
+  const CATEGORY_ORDER = ["Ventes", "Braquage", "Actions", "Four"];
+  const CATEGORY_LABELS = {
+    Ventes: "Ventes",
+    Braquage: "Braquages",
+    Actions: "Actions",
+    Four: "Ventes du Four",
+  };
+
+  // Renvoie le dimanche 19h le plus récent (même logique que la Comptabilité).
+  function getWeekStart(now = new Date()) {
+    const d = new Date(now);
+    const candidate = new Date(d);
+    candidate.setDate(d.getDate() - d.getDay());
+    candidate.setHours(19, 0, 0, 0);
+    if (candidate > d) candidate.setDate(candidate.getDate() - 7);
+    return candidate;
+  }
+
+  function money(n) {
+    return '$' + Number(n || 0).toLocaleString('fr-FR');
+  }
+
+  requireAuth().then(() => {
+    const container = document.getElementById('recapSections');
+
+    onSnapshot(collection(db, 'actions'), (snap) => {
+      const weekStart = getWeekStart().getTime();
+      const rows = snap.docs
+        .map(d => d.data())
+        .filter(a => {
+          const ts = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+          return ts >= weekStart;
+        });
+
+      if (rows.length === 0) {
+        container.innerHTML = '<div class="card"><p style="color:var(--text-2); margin:0;">Rien d\'enregistré depuis dimanche 19h pour l\'instant.</p></div>';
+        return;
+      }
+
+      // Regroupe par categorie puis par item.
+      const grouped = {};
+      rows.forEach(a => {
+        const cat = a.category || 'Autre';
+        const item = a.item || '—';
+        grouped[cat] = grouped[cat] || {};
+        grouped[cat][item] = grouped[cat][item] || { count: 0, qty: 0, amount: 0 };
+        grouped[cat][item].count += 1;
+        grouped[cat][item].qty += Number(a.quantity || 1);
+        grouped[cat][item].amount += Number(a.amount || 0);
+      });
+
+      const orderedCats = [
+        ...CATEGORY_ORDER.filter(c => grouped[c]),
+        ...Object.keys(grouped).filter(c => !CATEGORY_ORDER.includes(c)),
+      ];
+
+      container.innerHTML = orderedCats.map(cat => {
+        const items = grouped[cat];
+        const itemNames = Object.keys(items).sort((a, b) => items[b].count - items[a].count);
+        const totalCount = itemNames.reduce((s, i) => s + items[i].count, 0);
+        const totalAmount = itemNames.reduce((s, i) => s + items[i].amount, 0);
+
+        const rowsHtml = itemNames.map(item => {
+          const it = items[item];
+          return `<tr>
+            <td>${item}</td>
+            <td>${it.count}</td>
+            <td>${it.qty}</td>
+            <td>${money(it.amount)}</td>
+          </tr>`;
+        }).join('');
+
+        return `
+          <div class="card" style="margin-bottom:20px;">
+            <h3>${CATEGORY_LABELS[cat] || cat}</h3>
+            <p class="card-sub">${totalCount} au total — ${money(totalAmount)}</p>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Détail</th><th>Nombre</th><th>Quantité</th><th>Argent rapporté</th></tr></thead>
+                <tbody>${rowsHtml}</tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }).join('');
+    });
+  });
+</script>
+<script src="js/mobile-nav.js"></script>
+</body>
+</html>
