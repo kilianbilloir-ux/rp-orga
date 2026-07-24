@@ -103,8 +103,12 @@
 
       const stats = users.map(u => {
         const mine = actions.filter(a => a.username === u.username);
-        // "Rentrée d'argent" compte dans l'argent rapporté mais pas comme une activité.
-        const count = mine.filter(a => a.countsAsActivity !== false).length;
+        // Le nombre d'activités ne compte que les Braquages et les Actions
+        // (pas les Ventes, ni le Four) — et jamais "Rentrée d'argent".
+        const count = mine.filter(a =>
+          (a.category === 'Braquage' || a.category === 'Actions')
+          && a.countsAsActivity !== false
+        ).length;
         const money = mine.reduce((s, a) => s + Number(a.amount || 0), 0);
         return { username: u.username, count, money };
       });
