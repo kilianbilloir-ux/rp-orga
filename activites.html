@@ -115,9 +115,9 @@
         <p class="card-sub">Tout ce qui a été enregistré par les membres.</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Membre</th><th>Catégorie</th><th>Détail</th><th>Qté</th><th>Caisse</th><th>Argent rapporté</th><th>Date</th></tr></thead>
+            <thead><tr><th>Membre</th><th>Catégorie</th><th>Détail</th><th>Qté</th><th>Caisse</th><th>Argent rapporté</th><th>Date</th><th></th></tr></thead>
             <tbody id="actionsTable">
-              <tr><td colspan="7" style="color:var(--text-2);">Chargement...</td></tr>
+              <tr><td colspan="8" style="color:var(--text-2);">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -129,7 +129,7 @@
 
 <script type="module">
   import { requireAuth, currentUser } from "./js/auth-guard.js";
-  import { db, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
+  import { db, collection, addDoc, doc, updateDoc, query, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
 
   const ITEMS = {
     Ventes: ["Cocaïne", "Tranq", "Meth bleue", "Weed", "Purple", "Crack", "Mexicana", "Ecstasy", "Lean", "B-magic", "Carte prépayée", "Spore X", "Héroïne", "Branche"],
@@ -141,7 +141,11 @@
   // mais pas dans le nombre d'activités réalisées (tableau des scores).
   const NON_ACTIVITY_ITEMS = ["Rentrée d'argent"];
 
+  const EDITOR_ROLES = ['admin', 'lead', 'co-lead', 'colead'];
+
   requireAuth().then(() => {
+    const canEdit = EDITOR_ROLES.includes((currentUser.role || '').toLowerCase());
+
     const categorySelect = document.getElementById('category');
     const itemField = document.getElementById('itemField');
     const itemSelect = document.getElementById('item');
@@ -195,29 +199,90 @@
       qtyField.style.display = 'none';
     });
 
+    function normalRow(id, a) {
+      const initials = (a.username || '??').slice(0, 2).toUpperCase();
+      const date = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString('fr-FR') : '—';
+      const amountHtml = '$' + Number(a.amount || 0).toLocaleString('fr-FR');
+      const pool = a.pool === 'clean' ? 'Propre' : 'Sale';
+      const editBtn = canEdit ? `<button class="btn btn-secondary btn-sm" data-edit="${id}">Modifier</button>` : '';
+      return `<tr data-row="${id}">
+        <td><div class="user-cell"><span class="avatar">${initials}</span> ${a.username || 'Inconnu'}</div></td>
+        <td><span class="badge">${a.category}</span></td>
+        <td>${a.item || '—'}</td>
+        <td>${a.quantity || 1}</td>
+        <td>${pool}</td>
+        <td>${amountHtml}</td>
+        <td>${date}</td>
+        <td>${editBtn}</td>
+      </tr>`;
+    }
+
+    function editRow(id, a) {
+      return `<tr data-row="${id}">
+        <td><input type="text" class="field-select" id="edit-username-${id}" value="${(a.username || '').replace(/"/g, '&quot;')}" style="padding:6px 8px; font-size:13px;"></td>
+        <td><span class="badge">${a.category}</span></td>
+        <td><input type="text" class="field-select" id="edit-item-${id}" value="${(a.item || '').replace(/"/g, '&quot;')}" style="padding:6px 8px; font-size:13px;"></td>
+        <td><input type="number" class="field-select" id="edit-qty-${id}" value="${a.quantity || 1}" min="1" style="padding:6px 8px; font-size:13px; width:70px;"></td>
+        <td>
+          <select id="edit-pool-${id}" class="field-select" style="padding:6px 8px; font-size:13px;">
+            <option value="dirty" ${a.pool !== 'clean' ? 'selected' : ''}>Sale</option>
+            <option value="clean" ${a.pool === 'clean' ? 'selected' : ''}>Propre</option>
+          </select>
+        </td>
+        <td><input type="number" class="field-select" id="edit-amount-${id}" value="${a.amount || 0}" min="0" style="padding:6px 8px; font-size:13px; width:90px;"></td>
+        <td colspan="2" style="white-space:nowrap;">
+          <button class="btn btn-primary btn-sm" data-save="${id}">Enregistrer</button>
+          <button class="btn btn-secondary btn-sm" data-cancel="${id}">Annuler</button>
+        </td>
+      </tr>`;
+    }
+
+    let allActions = [];
+    let editingId = null;
+
+    function render() {
+      if (allActions.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="color:var(--text-2);">Aucune action enregistrée pour l\'instant.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = allActions.map(({ id, data }) =>
+        id === editingId ? editRow(id, data) : normalRow(id, data)
+      ).join('');
+
+      tbody.querySelectorAll('[data-edit]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          editingId = btn.dataset.edit;
+          render();
+        });
+      });
+      tbody.querySelectorAll('[data-cancel]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          editingId = null;
+          render();
+        });
+      });
+      tbody.querySelectorAll('[data-save]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.save;
+          const username = document.getElementById(`edit-username-${id}`).value.trim();
+          const item = document.getElementById(`edit-item-${id}`).value.trim();
+          const quantity = Number(document.getElementById(`edit-qty-${id}`).value || 1);
+          const pool = document.getElementById(`edit-pool-${id}`).value;
+          const amount = Number(document.getElementById(`edit-amount-${id}`).value || 0);
+          try {
+            await updateDoc(doc(db, 'actions', id), { username, item, quantity, pool, amount });
+            editingId = null;
+          } catch (err) {
+            alert("Impossible de modifier : " + err.message);
+          }
+        });
+      });
+    }
 
     const q = query(collection(db, 'actions'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snap) => {
-      if (snap.empty) {
-        tbody.innerHTML = '<tr><td colspan="7" style="color:var(--text-2);">Aucune action enregistrée pour l\'instant.</td></tr>';
-        return;
-      }
-      tbody.innerHTML = snap.docs.map(d => {
-        const a = d.data();
-        const initials = (a.username || '??').slice(0, 2).toUpperCase();
-        const date = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString('fr-FR') : '—';
-        const amountHtml = '$' + Number(a.amount || 0).toLocaleString('fr-FR');
-        const pool = a.pool === 'clean' ? 'Propre' : 'Sale';
-        return `<tr>
-          <td><div class="user-cell"><span class="avatar">${initials}</span> ${a.username || 'Inconnu'}</div></td>
-          <td><span class="badge">${a.category}</span></td>
-          <td>${a.item || '—'}</td>
-          <td>${a.quantity || 1}</td>
-          <td>${pool}</td>
-          <td>${amountHtml}</td>
-          <td>${date}</td>
-        </tr>`;
-      }).join('');
+      allActions = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+      render();
     });
   });
 </script>
