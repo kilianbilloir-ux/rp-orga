@@ -16,6 +16,7 @@ export const currentUser = {
   role: 'Membre',
   organisation: '—',
   heuresDeJeu: 0,
+  discordId: '',
   banned: false,
 };
 
@@ -84,6 +85,7 @@ export function requireAuth() {
           currentUser.role = data.role || 'Membre';
           currentUser.organisation = data.organisation || '—';
           currentUser.heuresDeJeu = data.heuresDeJeu ?? 0;
+          currentUser.discordId = data.discordId || '';
 
           wireLogoutButtons();
           fillPlaceholders();
