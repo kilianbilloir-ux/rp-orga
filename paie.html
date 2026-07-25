@@ -109,14 +109,18 @@
   // - Branche : 80$ pour le pot + 80$ par graine plantée (quantité saisie)
   // - Ventes  : prix d'achat unitaire renseigné x quantité vendue
   // - le reste : coût fixe défini dans ITEM_COST (0 si non renseigné)
+  // Si l'action a été partagée entre coéquipiers (Fleeca, plantation), le
+  // coût est déjà divisé par le nombre de participants (splitCount).
   function materialCostOf(a) {
+    let raw;
     if (a.item === 'Branche') {
-      return 80 + 80 * Number(a.quantity || 0);
+      raw = 80 + 80 * Number(a.quantity || 0);
+    } else if (a.category === 'Ventes') {
+      raw = Number(a.buyPrice || 0) * Number(a.quantity || 1);
+    } else {
+      raw = ITEM_COST[a.item] || 0;
     }
-    if (a.category === 'Ventes') {
-      return Number(a.buyPrice || 0) * Number(a.quantity || 1);
-    }
-    return ITEM_COST[a.item] || 0;
+    return raw / Number(a.splitCount || 1);
   }
 
   // Part du "sale" (brut) qui devient du "propre" (net), avant déduction du matériel.
