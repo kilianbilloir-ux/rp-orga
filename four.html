@@ -135,6 +135,10 @@
               <option value="clean">Propre</option>
             </select>
           </div>
+          <div class="field" id="mateField" style="display:none;">
+            <label for="fourMate">Coéquipier (optionnel, 2 personnes max)</label>
+            <select id="fourMate" class="field-select"><option value="">Aucun</option></select>
+          </div>
           <button type="submit" class="btn btn-primary btn-block">Enregistrer</button>
         </form>
       </div>
@@ -165,35 +169,60 @@
     const tbody = document.getElementById('fourTable');
     const itemSelect = document.getElementById('fourItem');
     const qtyLabel = document.getElementById('fourQtyLabel');
+    const mateField = document.getElementById('mateField');
+    const mateSelect = document.getElementById('fourMate');
+
+    let allUsers = [];
+    onSnapshot(collection(db, 'users'), (snap) => {
+      allUsers = snap.docs.map(d => d.data()).filter(u => u.username !== currentUser.username);
+      mateSelect.innerHTML = '<option value="">Aucun</option>' + allUsers.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+    });
 
     itemSelect.addEventListener('change', () => {
-      qtyLabel.textContent = itemSelect.value === 'Branche' ? 'Nombre de graines plantées' : 'Nombre vendu';
+      const isBranche = itemSelect.value === 'Branche';
+      qtyLabel.textContent = isBranche ? 'Nombre de graines plantées' : 'Nombre vendu';
+      mateField.style.display = isBranche ? 'block' : 'none';
     });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const item = document.getElementById('fourItem').value;
       const quantity = Number(document.getElementById('fourQty').value || 0);
-      const amount = Number(document.getElementById('fourAmount').value || 0);
+      const totalAmount = Number(document.getElementById('fourAmount').value || 0);
       const pool = document.getElementById('fourPool').value;
 
-      if (!quantity || !amount) {
+      if (!quantity || !totalAmount) {
         alert('Renseigne le nombre vendu et le prix total.');
         return;
       }
 
-      await addDoc(collection(db, 'actions'), {
-        username: currentUser.username,
-        uid: currentUser.uid,
-        category: 'Four',
-        item,
-        quantity,
-        amount,
-        pool,
-        createdAt: serverTimestamp(),
-      });
+      // La plantation (Branche) peut être partagée à 2 personnes max :
+      // l'argent rapporté ET le coût du matériel (pot + graines) sont
+      // alors divisés en 2.
+      let participants = [currentUser.username];
+      if (item === 'Branche' && mateSelect.value && mateSelect.value !== currentUser.username) {
+        participants.push(mateSelect.value);
+      }
+      const splitCount = participants.length;
+      const amount = totalAmount / splitCount;
+
+      for (const username of participants) {
+        const u = username === currentUser.username ? currentUser : allUsers.find(x => x.username === username);
+        await addDoc(collection(db, 'actions'), {
+          username,
+          uid: u?.uid || (username === currentUser.username ? currentUser.uid : null),
+          category: 'Four',
+          item,
+          quantity,
+          amount,
+          splitCount,
+          pool,
+          createdAt: serverTimestamp(),
+        });
+      }
 
       form.reset();
+      mateField.style.display = 'none';
     });
 
 
