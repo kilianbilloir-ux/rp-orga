@@ -116,6 +116,17 @@
             <input id="buyPrice" type="number" min="0" step="0.01" placeholder="0">
           </div>
 
+          <div id="mateFields" style="display:none;">
+            <div class="field">
+              <label for="mate1">Coéquipier 2 (optionnel)</label>
+              <select id="mate1" class="field-select"><option value="">Aucun</option></select>
+            </div>
+            <div class="field">
+              <label for="mate2">Coéquipier 3 (optionnel)</label>
+              <select id="mate2" class="field-select"><option value="">Aucun</option></select>
+            </div>
+          </div>
+
           <div class="field">
             <label for="amount">Argent rapporté ($)</label>
             <input id="amount" type="number" min="0" placeholder="0" required>
@@ -168,8 +179,24 @@
     const qtyInput = document.getElementById('qty');
     const buyPriceField = document.getElementById('buyPriceField');
     const buyPriceInput = document.getElementById('buyPrice');
+    const mateFields = document.getElementById('mateFields');
+    const mate1Select = document.getElementById('mate1');
+    const mate2Select = document.getElementById('mate2');
     const form = document.getElementById('actionForm');
     const tbody = document.getElementById('actionsTable');
+
+    // Liste des membres, utilisée pour choisir des coéquipiers (Fleeca).
+    let allUsers = [];
+    onSnapshot(collection(db, 'users'), (snap) => {
+      allUsers = snap.docs.map(d => d.data()).filter(u => u.username !== currentUser.username);
+      const options = '<option value="">Aucun</option>' + allUsers.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+      mate1Select.innerHTML = options;
+      mate2Select.innerHTML = options;
+    });
+
+    function updateMateVisibility() {
+      mateFields.style.display = (itemSelect.value === 'Fleeca') ? 'block' : 'none';
+    }
 
     categorySelect.addEventListener('change', () => {
       const cat = categorySelect.value;
@@ -179,6 +206,7 @@
         itemSelect.innerHTML = '';
         qtyField.style.display = 'none';
         buyPriceField.style.display = 'none';
+        mateFields.style.display = 'none';
         return;
       }
       itemSelect.innerHTML = options.map(o => `<option value="${o}">${o}</option>`).join('');
@@ -188,13 +216,16 @@
       // une seule fois par soumission.
       qtyField.style.display = (cat === 'Ventes') ? 'block' : 'none';
       buyPriceField.style.display = (cat === 'Ventes') ? 'block' : 'none';
+      updateMateVisibility();
     });
+
+    itemSelect.addEventListener('change', updateMateVisibility);
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const category = categorySelect.value;
       const item = itemSelect.value;
-      const amount = Number(document.getElementById('amount').value || 0);
+      const totalAmount = Number(document.getElementById('amount').value || 0);
       const quantity = (category === 'Ventes') ? Number(qtyInput.value || 1) : 1;
       const buyPrice = (category === 'Ventes') ? Number(buyPriceInput.value || 0) : 0;
 
@@ -203,23 +234,38 @@
         return;
       }
 
-      await addDoc(collection(db, 'actions'), {
-        username: currentUser.username,
-        uid: currentUser.uid,
-        category,
-        item,
-        quantity,
-        amount,
-        buyPrice,
-        pool: item === 'Cambu' ? 'clean' : 'dirty',
-        countsAsActivity: !NON_ACTIVITY_ITEMS.includes(item),
-        createdAt: serverTimestamp(),
-      });
+      // Fleeca peut être partagé entre 3 personnes max : l'argent rapporté
+      // ET le coût du matériel (7000$) sont alors divisés en autant de parts.
+      let participants = [currentUser.username];
+      if (item === 'Fleeca') {
+        if (mate1Select.value && mate1Select.value !== currentUser.username) participants.push(mate1Select.value);
+        if (mate2Select.value && mate2Select.value !== currentUser.username && mate2Select.value !== mate1Select.value) participants.push(mate2Select.value);
+      }
+      const splitCount = participants.length;
+      const amount = totalAmount / splitCount;
+
+      for (const username of participants) {
+        const u = username === currentUser.username ? currentUser : allUsers.find(x => x.username === username);
+        await addDoc(collection(db, 'actions'), {
+          username,
+          uid: u?.uid || (username === currentUser.username ? currentUser.uid : null),
+          category,
+          item,
+          quantity,
+          amount,
+          buyPrice,
+          splitCount,
+          pool: item === 'Cambu' ? 'clean' : 'dirty',
+          countsAsActivity: !NON_ACTIVITY_ITEMS.includes(item),
+          createdAt: serverTimestamp(),
+        });
+      }
 
       form.reset();
       itemField.style.display = 'none';
       qtyField.style.display = 'none';
       buyPriceField.style.display = 'none';
+      mateFields.style.display = 'none';
     });
 
     function normalRow(id, a) {
