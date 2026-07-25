@@ -97,6 +97,20 @@
         </div>
       </div>
 
+      <div class="card" style="max-width:480px; margin-bottom:20px;">
+        <h3>Ping Discord</h3>
+        <p class="card-sub">Renseigne ton ID Discord pour être ping quand un délai (Go fast, ATM...) se termine.</p>
+        <div class="field">
+          <label for="discordIdInput">Ton ID Discord</label>
+          <input id="discordIdInput" type="text" inputmode="numeric" placeholder="Ex : 123456789012345678">
+        </div>
+        <button class="btn btn-primary btn-block" id="saveDiscordId">Enregistrer</button>
+        <p style="color:var(--text-2); font-size:12px; margin:12px 0 0;">
+          Pour le trouver : Discord → Réglages → Avancés → active "Mode développeur", puis fais un clic droit
+          sur ton propre pseudo/avatar quelque part → "Copier l'ID".
+        </p>
+      </div>
+
       <div class="card">
         <h3>Activité récente</h3>
         <p class="card-sub">Nouveaux membres, ventes et braquages réalisés sur le serveur.</p>
@@ -110,10 +124,22 @@
 
 
 <script type="module">
-  import { requireAuth } from "./js/auth-guard.js";
-  import { db, collection, query, orderBy, limit, onSnapshot } from "./js/firebase-init.js";
+  import { requireAuth, currentUser } from "./js/auth-guard.js";
+  import { db, doc, updateDoc, collection, query, orderBy, limit, onSnapshot } from "./js/firebase-init.js";
 
   requireAuth().then(() => {
+    const discordInput = document.getElementById('discordIdInput');
+    discordInput.value = currentUser.discordId || '';
+    document.getElementById('saveDiscordId').addEventListener('click', async () => {
+      const value = discordInput.value.trim();
+      try {
+        await updateDoc(doc(db, 'users', currentUser.uid), { discordId: value });
+        alert('ID Discord enregistré !');
+      } catch (err) {
+        alert("Impossible d'enregistrer : " + err.message);
+      }
+    });
+
     const list = document.getElementById('recentActivity');
     let joins = [];
     let actions = [];
