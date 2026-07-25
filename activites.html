@@ -167,6 +167,10 @@
   // mais pas dans le nombre d'activités réalisées (tableau des scores).
   const NON_ACTIVITY_ITEMS = ["Rentrée d'argent"];
 
+  // Ces braquages peuvent être partagés à plusieurs (3 personnes max) :
+  // l'argent rapporté (et le coût matériel s'il y en a un) est alors divisé.
+  const SHARABLE_ITEMS = ["Fleeca", "Armurerie"];
+
   const EDITOR_ROLES = ['admin', 'lead', 'co-lead', 'colead'];
 
   requireAuth().then(() => {
@@ -195,7 +199,7 @@
     });
 
     function updateMateVisibility() {
-      mateFields.style.display = (itemSelect.value === 'Fleeca') ? 'block' : 'none';
+      mateFields.style.display = SHARABLE_ITEMS.includes(itemSelect.value) ? 'block' : 'none';
     }
 
     categorySelect.addEventListener('change', () => {
@@ -237,7 +241,7 @@
       // Fleeca peut être partagé entre 3 personnes max : l'argent rapporté
       // ET le coût du matériel (7000$) sont alors divisés en autant de parts.
       let participants = [currentUser.username];
-      if (item === 'Fleeca') {
+      if (SHARABLE_ITEMS.includes(item)) {
         if (mate1Select.value && mate1Select.value !== currentUser.username) participants.push(mate1Select.value);
         if (mate2Select.value && mate2Select.value !== currentUser.username && mate2Select.value !== mate1Select.value) participants.push(mate2Select.value);
       }
