@@ -187,7 +187,10 @@
       withCooldown.filter(a => !a.discordNotified).forEach(async (a) => {
         try {
           await updateDoc(doc(db, 'actions', a.id), { discordNotified: true });
-          await sendDiscordMessage(`✅ **${currentUser.username}** peut maintenant refaire un(e) **${a.item}** !`);
+          const who = currentUser.discordId
+            ? `<@${currentUser.discordId}>`
+            : `**${currentUser.username}**`;
+          await sendDiscordMessage(`✅ ${who} peut maintenant refaire un(e) **${a.item}** !`);
         } catch (e) {
           console.error('Erreur notification Discord :', e);
         }
