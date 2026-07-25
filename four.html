@@ -121,7 +121,7 @@
             </select>
           </div>
           <div class="field">
-            <label for="fourQty">Nombre vendu</label>
+            <label for="fourQty" id="fourQtyLabel">Nombre vendu</label>
             <input id="fourQty" type="number" min="1" step="1" placeholder="1" required>
           </div>
           <div class="field">
@@ -163,6 +163,12 @@
   requireAuth().then(() => {
     const form = document.getElementById('fourForm');
     const tbody = document.getElementById('fourTable');
+    const itemSelect = document.getElementById('fourItem');
+    const qtyLabel = document.getElementById('fourQtyLabel');
+
+    itemSelect.addEventListener('change', () => {
+      qtyLabel.textContent = itemSelect.value === 'Branche' ? 'Nombre de graines plantées' : 'Nombre vendu';
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
