@@ -102,7 +102,22 @@
   const ITEM_COST = {
     "ATM": 350,
     "Cambu": 150,
+    "Fleeca": 7000,
   };
+
+  // Calcule le coût matériel d'une action précise :
+  // - Branche : 80$ pour le pot + 80$ par graine plantée (quantité saisie)
+  // - Ventes  : prix d'achat unitaire renseigné x quantité vendue
+  // - le reste : coût fixe défini dans ITEM_COST (0 si non renseigné)
+  function materialCostOf(a) {
+    if (a.item === 'Branche') {
+      return 80 + 80 * Number(a.quantity || 0);
+    }
+    if (a.category === 'Ventes') {
+      return Number(a.buyPrice || 0) * Number(a.quantity || 1);
+    }
+    return ITEM_COST[a.item] || 0;
+  }
 
   // Part du "sale" (brut) qui devient du "propre" (net), avant déduction du matériel.
   const NET_RATE = 0.7;
@@ -156,7 +171,7 @@
         const mine = weekActions.filter(a => a.username === u.username);
 
         const sale = mine.reduce((s, a) => s + Number(a.amount || 0), 0);
-        const materiel = mine.reduce((s, a) => s + (ITEM_COST[a.item] || 0), 0);
+        const materiel = mine.reduce((s, a) => s + materialCostOf(a), 0);
         const net = (sale * NET_RATE) - materiel;
 
         // Regroupe le détail par catégorie puis par item.
@@ -165,9 +180,10 @@
           const cat = a.category || 'Autre';
           const item = a.item || '—';
           grouped[cat] = grouped[cat] || {};
-          grouped[cat][item] = grouped[cat][item] || { count: 0, amount: 0 };
+          grouped[cat][item] = grouped[cat][item] || { count: 0, amount: 0, material: 0 };
           grouped[cat][item].count += 1;
           grouped[cat][item].amount += Number(a.amount || 0);
+          grouped[cat][item].material += materialCostOf(a);
         });
 
         const detailHtml = Object.keys(grouped).length === 0
@@ -179,7 +195,7 @@
                   <td>${item}</td>
                   <td>${items[item].count}</td>
                   <td>${money(items[item].amount)}</td>
-                  <td>${money((ITEM_COST[item] || 0) * items[item].count)}</td>
+                  <td>${money(items[item].material)}</td>
                 </tr>
               `).join('');
               return `
