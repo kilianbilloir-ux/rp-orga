@@ -90,7 +90,7 @@
 
 <script type="module">
   import { requireAuth, currentUser } from "./js/auth-guard.js";
-  import { db, collection, query, where, onSnapshot } from "./js/firebase-init.js";
+  import { db, collection, doc, updateDoc, query, where, onSnapshot } from "./js/firebase-init.js";
 
   const WARN_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
   const OK_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>';
@@ -102,6 +102,20 @@
     "Supérette": 3,
     "Cambu": 3,
   };
+
+  const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1530506907570274304/eKV0vr_Xox5mJNscu-fgdNUdFh8CMfzJQm-2HdnMTHBgj-2wCrRr6JZx6FoxuSMJmkgt";
+
+  async function sendDiscordMessage(content) {
+    try {
+      await fetch(DISCORD_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
+    } catch (e) {
+      console.error('Erreur webhook Discord :', e);
+    }
+  }
 
   requireAuth().then(() => {
     const list = document.getElementById('notifList');
@@ -138,32 +152,46 @@
     });
 
     // Notification "tu peux refaire ça" : calculée en direct, elle n'apparaît
-    // qu'une fois le délai (24h / 4h / 3h) réellement écoulé depuis l'action.
+    // qu'une fois le délai (24h / 3h) réellement écoulé depuis l'action.
     onSnapshot(query(collection(db, 'actions'), where('uid', '==', currentUser.uid)), (snap) => {
       const now = Date.now();
-      cooldownsReady = snap.docs
-        .map(d => d.data())
+      const withCooldown = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
         .filter(a => COOLDOWN_HOURS[a.item])
         .map(a => {
           const doneAt = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
           const cooldown = COOLDOWN_HOURS[a.item];
           const availableAt = doneAt + cooldown * 3600 * 1000;
-          return { item: a.item, doneAt, availableAt };
+          return { id: a.id, item: a.item, doneAt, availableAt, discordNotified: a.discordNotified === true };
         })
-        .filter(a => now >= a.availableAt)
-        // Ne garde que la dernière action par item (pas besoin de répéter le message).
-        .reduce((acc, a) => {
-          if (!acc[a.item] || a.doneAt > acc[a.item].doneAt) acc[a.item] = a;
-          return acc;
-        }, {});
+        .filter(a => now >= a.availableAt);
 
-      cooldownsReady = Object.values(cooldownsReady).map(a => ({
+      // Ne garde que la dernière action par item pour l'affichage (pas besoin
+      // de répéter le message plusieurs fois pour le même item).
+      const latestPerItem = withCooldown.reduce((acc, a) => {
+        if (!acc[a.item] || a.doneAt > acc[a.item].doneAt) acc[a.item] = a;
+        return acc;
+      }, {});
+
+      cooldownsReady = Object.values(latestPerItem).map(a => ({
         type: 'cooldown',
         message: `Tu peux maintenant refaire un(e) ${a.item} !`,
         ts: a.availableAt,
         date: fmt(a.availableAt),
       }));
       render();
+
+      // Envoie sur Discord une seule fois par action (marquée dans Firestore
+      // pour éviter les doublons, même si plusieurs personnes ont la page
+      // ouverte ou si elle se recharge).
+      withCooldown.filter(a => !a.discordNotified).forEach(async (a) => {
+        try {
+          await updateDoc(doc(db, 'actions', a.id), { discordNotified: true });
+          await sendDiscordMessage(`✅ **${currentUser.username}** peut maintenant refaire un(e) **${a.item}** !`);
+        } catch (e) {
+          console.error('Erreur notification Discord :', e);
+        }
+      });
     });
 
     // Recalcule toutes les minutes pour faire apparaître les notifications
