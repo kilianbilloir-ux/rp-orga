@@ -116,6 +116,20 @@
         </div>
       </div>
 
+      <h3 style="margin-bottom:10px;">Argent rapporté total <span style="color:var(--text-2); font-weight:500; font-size:13px;">— depuis le début, ne se réinitialise jamais</span></h3>
+      <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom:24px;">
+        <div class="stat-tile">
+          <div class="label">Sale</div>
+          <div class="value" id="allTimeDirtyIncome">—</div>
+          <div class="sub">Depuis le début</div>
+        </div>
+        <div class="stat-tile">
+          <div class="label">Propre</div>
+          <div class="value" id="allTimeCleanIncome">—</div>
+          <div class="sub">Depuis le début</div>
+        </div>
+      </div>
+
       <h3 style="margin-bottom:10px;">Dépenses <span style="color:var(--text-2); font-weight:500; font-size:13px;">— depuis dimanche 19h</span></h3>
       <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom:24px;">
         <div class="stat-tile">
@@ -247,10 +261,16 @@
       const weekDirtyProfit = weekDirtyIncome - weekDirtyExpenses;
       const weekCleanProfit = weekCleanIncome - weekCleanExpenses;
 
+      // Argent rapporté total — depuis le tout début, ne se réinitialise jamais.
+      const allTimeDirtyIncome = sum(actions.filter(a => poolOfAction(a) === 'dirty'));
+      const allTimeCleanIncome = sum(actions.filter(a => poolOfAction(a) === 'clean'));
+
       document.getElementById('totalDirty').textContent = money(totalDirty);
       document.getElementById('totalClean').textContent = money(totalClean);
       document.getElementById('weekDirtyIncome').textContent = money(weekDirtyIncome);
       document.getElementById('weekCleanIncome').textContent = money(weekCleanIncome);
+      document.getElementById('allTimeDirtyIncome').textContent = money(allTimeDirtyIncome);
+      document.getElementById('allTimeCleanIncome').textContent = money(allTimeCleanIncome);
       document.getElementById('weekDirtyExpenses').textContent = money(weekDirtyExpenses);
       document.getElementById('weekCleanExpenses').textContent = money(weekCleanExpenses);
 
