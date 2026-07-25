@@ -111,6 +111,11 @@
             <input id="qty" type="number" min="1" step="1" placeholder="1">
           </div>
 
+          <div class="field" id="buyPriceField" style="display:none;">
+            <label for="buyPrice">Prix d'achat unitaire ($)</label>
+            <input id="buyPrice" type="number" min="0" step="0.01" placeholder="0">
+          </div>
+
           <div class="field">
             <label for="amount">Argent rapporté ($)</label>
             <input id="amount" type="number" min="0" placeholder="0" required>
@@ -161,6 +166,8 @@
     const itemSelect = document.getElementById('item');
     const qtyField = document.getElementById('qtyField');
     const qtyInput = document.getElementById('qty');
+    const buyPriceField = document.getElementById('buyPriceField');
+    const buyPriceInput = document.getElementById('buyPrice');
     const form = document.getElementById('actionForm');
     const tbody = document.getElementById('actionsTable');
 
@@ -171,13 +178,16 @@
         itemField.style.display = 'none';
         itemSelect.innerHTML = '';
         qtyField.style.display = 'none';
+        buyPriceField.style.display = 'none';
         return;
       }
       itemSelect.innerHTML = options.map(o => `<option value="${o}">${o}</option>`).join('');
       itemField.style.display = 'block';
-      // Le nombre vendu ne se demande que pour les ventes ; braquages et
-      // actions restent toujours comptés une seule fois par soumission.
+      // Le nombre vendu et le prix d'achat unitaire ne se demandent que
+      // pour les ventes ; braquages et actions restent toujours comptés
+      // une seule fois par soumission.
       qtyField.style.display = (cat === 'Ventes') ? 'block' : 'none';
+      buyPriceField.style.display = (cat === 'Ventes') ? 'block' : 'none';
     });
 
     form.addEventListener('submit', async (e) => {
@@ -186,6 +196,7 @@
       const item = itemSelect.value;
       const amount = Number(document.getElementById('amount').value || 0);
       const quantity = (category === 'Ventes') ? Number(qtyInput.value || 1) : 1;
+      const buyPrice = (category === 'Ventes') ? Number(buyPriceInput.value || 0) : 0;
 
       if (!category || !item) {
         alert('Choisis une catégorie et précise laquelle.');
@@ -199,6 +210,7 @@
         item,
         quantity,
         amount,
+        buyPrice,
         pool: item === 'Cambu' ? 'clean' : 'dirty',
         countsAsActivity: !NON_ACTIVITY_ITEMS.includes(item),
         createdAt: serverTimestamp(),
@@ -207,6 +219,7 @@
       form.reset();
       itemField.style.display = 'none';
       qtyField.style.display = 'none';
+      buyPriceField.style.display = 'none';
     });
 
     function normalRow(id, a) {
