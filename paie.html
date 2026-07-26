@@ -174,9 +174,14 @@
       container.innerHTML = users.map(u => {
         const mine = weekActions.filter(a => a.username === u.username);
 
-        const sale = mine.reduce((s, a) => s + Number(a.amount || 0), 0);
-        const materiel = mine.reduce((s, a) => s + materialCostOf(a), 0);
-        const net = (sale * NET_RATE) - materiel;
+        const isClean = a => a.pool === 'clean';
+
+        const brut = mine.reduce((s, a) => s + Number(a.amount || 0), 0);
+        const materielSale = mine.filter(a => !isClean(a)).reduce((s, a) => s + materialCostOf(a), 0);
+        const materielPropre = mine.filter(isClean).reduce((s, a) => s + materialCostOf(a), 0);
+
+        // Paie = 70% du (brut - matériel sale), puis on retire le matériel propre.
+        const paie = ((brut - materielSale) * NET_RATE) - materielPropre;
 
         // Regroupe le détail par catégorie puis par item.
         const grouped = {};
@@ -220,19 +225,29 @@
               <h3 style="margin:0;">${u.username}</h3>
             </div>
 
-            <div class="stat-grid" style="grid-template-columns: repeat(3, 1fr); margin-top:14px;">
+            <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-top:14px; margin-bottom:16px;">
               <div class="stat-tile">
-                <div class="label">Sale (brut)</div>
-                <div class="value" style="font-size:20px;">${money(sale)}</div>
+                <div class="label">Brut</div>
+                <div class="value" style="font-size:20px;">${money(brut)}</div>
+                <div class="sub">Toutes actions confondues</div>
               </div>
               <div class="stat-tile">
-                <div class="label">Matériel déduit</div>
-                <div class="value" style="font-size:20px; color:var(--red);">${money(materiel)}</div>
+                <div class="label">Paie (net final)</div>
+                <div class="value" style="font-size:20px; color:${paie >= 0 ? 'var(--green)' : 'var(--red)'};">${money(paie)}</div>
+                <div class="sub">70% × (brut − matériel sale) − matériel propre</div>
+              </div>
+            </div>
+
+            <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr);">
+              <div class="stat-tile">
+                <div class="label">Matériel sale déduit</div>
+                <div class="value" style="font-size:20px; color:var(--red);">${money(materielSale)}</div>
+                <div class="sub">Déduit avant les 70%</div>
               </div>
               <div class="stat-tile">
-                <div class="label">Propre (net)</div>
-                <div class="value" style="font-size:20px; color:${net >= 0 ? 'var(--green)' : 'var(--red)'};">${money(net)}</div>
-                <div class="sub">70% du brut − matériel</div>
+                <div class="label">Matériel propre déduit</div>
+                <div class="value" style="font-size:20px; color:var(--red);">${money(materielPropre)}</div>
+                <div class="sub">Déduit après les 70%</div>
               </div>
             </div>
 
