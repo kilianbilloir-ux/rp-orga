@@ -27,6 +27,7 @@ import {
   onSnapshot,
   getDocs,
   serverTimestamp,
+  increment,
   Timestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -70,5 +71,6 @@ export {
   onSnapshot,
   getDocs,
   serverTimestamp,
+  increment,
   Timestamp,
 };
