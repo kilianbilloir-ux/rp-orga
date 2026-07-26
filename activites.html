@@ -121,7 +121,7 @@
               <label for="mate1">Coéquipier 2 (optionnel)</label>
               <select id="mate1" class="field-select"><option value="">Aucun</option></select>
             </div>
-            <div class="field">
+            <div class="field" id="mate2Field">
               <label for="mate2">Coéquipier 3 (optionnel)</label>
               <select id="mate2" class="field-select"><option value="">Aucun</option></select>
             </div>
@@ -155,7 +155,7 @@
 
 <script type="module">
   import { requireAuth, currentUser } from "./js/auth-guard.js";
-  import { db, collection, addDoc, doc, updateDoc, query, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
+  import { db, collection, addDoc, doc, updateDoc, increment, query, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
 
   const ITEMS = {
     Ventes: ["Cocaïne", "Tranq", "Meth bleue", "Weed", "Purple", "Crack", "Mexicana", "Ecstasy", "Lean", "B-magic", "Carte prépayée", "Spore X", "Héroïne", "Branche"],
@@ -167,9 +167,11 @@
   // mais pas dans le nombre d'activités réalisées (tableau des scores).
   const NON_ACTIVITY_ITEMS = ["Rentrée d'argent"];
 
-  // Ces braquages peuvent être partagés à plusieurs (3 personnes max) :
-  // l'argent rapporté (et le coût matériel s'il y en a un) est alors divisé.
-  const SHARABLE_ITEMS = ["Fleeca", "Armurerie"];
+  // Ces items peuvent être partagés entre coéquipiers : l'argent rapporté
+  // (et le coût matériel s'il y en a un) est alors divisé entre eux.
+  // Fleeca/Armurerie : jusqu'à 3 personnes. Branche : 2 personnes max.
+  const SHARABLE_ITEMS = ["Fleeca", "Armurerie", "Branche"];
+  const SINGLE_MATE_ITEMS = ["Branche"];
 
   const EDITOR_ROLES = ['admin', 'lead', 'co-lead', 'colead'];
 
@@ -184,6 +186,7 @@
     const buyPriceField = document.getElementById('buyPriceField');
     const buyPriceInput = document.getElementById('buyPrice');
     const mateFields = document.getElementById('mateFields');
+    const mate2Field = document.getElementById('mate2Field');
     const mate1Select = document.getElementById('mate1');
     const mate2Select = document.getElementById('mate2');
     const form = document.getElementById('actionForm');
@@ -199,7 +202,11 @@
     });
 
     function updateMateVisibility() {
-      mateFields.style.display = SHARABLE_ITEMS.includes(itemSelect.value) ? 'block' : 'none';
+      const item = itemSelect.value;
+      mateFields.style.display = SHARABLE_ITEMS.includes(item) ? 'block' : 'none';
+      mate2Field.style.display = SINGLE_MATE_ITEMS.includes(item) ? 'none' : 'block';
+      // Branche : coût fixe (10800$), pas de prix d'achat unitaire à saisir.
+      if (item === 'Branche') buyPriceField.style.display = 'none';
     }
 
     categorySelect.addEventListener('change', () => {
@@ -250,9 +257,10 @@
 
       for (const username of participants) {
         const u = username === currentUser.username ? currentUser : allUsers.find(x => x.username === username);
+        const participantUid = u?.uid || (username === currentUser.username ? currentUser.uid : null);
         await addDoc(collection(db, 'actions'), {
           username,
-          uid: u?.uid || (username === currentUser.username ? currentUser.uid : null),
+          uid: participantUid,
           category,
           item,
           quantity,
@@ -263,6 +271,17 @@
           countsAsActivity: !NON_ACTIVITY_ITEMS.includes(item),
           createdAt: serverTimestamp(),
         });
+        // Compteur permanent : n'augmente jamais en double, ne diminue
+        // jamais, même si l'action est ensuite modifiée ou supprimée.
+        if (participantUid) {
+          try {
+            await updateDoc(doc(db, 'users', participantUid), {
+              totalArgentRapporte: increment(amount),
+            });
+          } catch (err) {
+            console.error('Erreur mise à jour du total permanent :', err);
+          }
+        }
       }
 
       form.reset();
