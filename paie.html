@@ -106,7 +106,7 @@
   };
 
   // Calcule le coût matériel d'une action précise :
-  // - Branche : 80$ pour le pot + 80$ par graine plantée (quantité saisie)
+  // - Branche : 10800$ fixe, peu importe le nombre de branches
   // - Ventes  : prix d'achat unitaire renseigné x quantité vendue
   // - le reste : coût fixe défini dans ITEM_COST (0 si non renseigné)
   // Si l'action a été partagée entre coéquipiers (Fleeca, plantation), le
@@ -114,7 +114,7 @@
   function materialCostOf(a) {
     let raw;
     if (a.item === 'Branche') {
-      raw = 80 + 80 * Number(a.quantity || 0);
+      raw = 10800;
     } else if (a.category === 'Ventes') {
       raw = Number(a.buyPrice || 0) * Number(a.quantity || 1);
     } else {
