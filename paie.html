@@ -80,7 +80,12 @@
     <main class="page">
       <div class="page-header">
         <h1>Tableau de paye</h1>
-        <p>Détail des actions par membre, semaine en cours (depuis dimanche 19h). Réservé au staff.</p>
+        <p>Détail des actions par membre. Réservé au staff.</p>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-bottom:20px;">
+        <button class="btn btn-primary btn-sm" id="btnThisWeek">Cette semaine</button>
+        <button class="btn btn-secondary btn-sm" id="btnLastWeek">Semaine dernière</button>
       </div>
 
       <div id="payrollList">
@@ -147,6 +152,15 @@
     return candidate;
   }
 
+  // weeksAgo = 0 -> semaine en cours, 1 -> semaine dernière.
+  function getWeekBounds(weeksAgo = 0) {
+    const start = getWeekStart();
+    start.setDate(start.getDate() - 7 * weeksAgo);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+    return { start: start.getTime(), end: end.getTime() };
+  }
+
   requireAuth().then(() => {
     const role = (currentUser.role || '').toLowerCase();
     if (!STAFF_ROLES.includes(role)) {
@@ -156,8 +170,24 @@
     }
 
     const container = document.getElementById('payrollList');
+    const btnThisWeek = document.getElementById('btnThisWeek');
+    const btnLastWeek = document.getElementById('btnLastWeek');
     let users = [];
     let actions = [];
+    let weeksAgo = 0;
+
+    btnThisWeek.addEventListener('click', () => {
+      weeksAgo = 0;
+      btnThisWeek.className = 'btn btn-primary btn-sm';
+      btnLastWeek.className = 'btn btn-secondary btn-sm';
+      render();
+    });
+    btnLastWeek.addEventListener('click', () => {
+      weeksAgo = 1;
+      btnLastWeek.className = 'btn btn-primary btn-sm';
+      btnThisWeek.className = 'btn btn-secondary btn-sm';
+      render();
+    });
 
     function render() {
       if (users.length === 0) {
@@ -165,10 +195,10 @@
         return;
       }
 
-      const weekStart = getWeekStart().getTime();
+      const { start, end } = getWeekBounds(weeksAgo);
       const weekActions = actions.filter(a => {
         const ts = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
-        return ts >= weekStart;
+        return ts >= start && ts < end;
       });
 
       container.innerHTML = users.map(u => {
