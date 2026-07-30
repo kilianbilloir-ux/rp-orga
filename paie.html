@@ -112,7 +112,9 @@
 
   // Calcule le coût matériel d'une action précise :
   // - Branche : 10800$ fixe, peu importe le nombre de branches
-  // - Ventes  : prix d'achat unitaire renseigné x quantité vendue
+  // - Prix d'achat renseigné (Ventes, ou drogue achetée au Four) : prix
+  //   unitaire x quantité. Si le champ est vide (drogue produite par nous),
+  //   il n'y a rien à déduire.
   // - le reste : coût fixe défini dans ITEM_COST (0 si non renseigné)
   // Si l'action a été partagée entre coéquipiers (Fleeca, plantation), le
   // coût est déjà divisé par le nombre de participants (splitCount).
@@ -120,7 +122,7 @@
     let raw;
     if (a.item === 'Branche') {
       raw = 10800;
-    } else if (a.category === 'Ventes') {
+    } else if (a.buyPrice) {
       raw = Number(a.buyPrice || 0) * Number(a.quantity || 1);
     } else {
       raw = ITEM_COST[a.item] || 0;
