@@ -158,9 +158,9 @@
         <p class="card-sub">Tout ce qui a été vendu par les membres.</p>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Membre</th><th>Objet</th><th>Quantité</th><th>Caisse</th><th>Prix total</th><th>Date</th></tr></thead>
+            <thead><tr><th>Membre</th><th>Objet</th><th>Quantité</th><th>Caisse</th><th>Prix total</th><th>Date</th><th></th></tr></thead>
             <tbody id="fourTable">
-              <tr><td colspan="6" style="color:var(--text-2);">Chargement...</td></tr>
+              <tr><td colspan="7" style="color:var(--text-2);">Chargement...</td></tr>
             </tbody>
           </table>
         </div>
@@ -172,7 +172,7 @@
 
 <script type="module">
   import { requireAuth, currentUser } from "./js/auth-guard.js";
-  import { db, collection, addDoc, doc, updateDoc, increment, query, where, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
+  import { db, collection, addDoc, doc, updateDoc, deleteDoc, increment, query, where, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
 
   requireAuth().then(() => {
     const form = document.getElementById('fourForm');
@@ -267,29 +267,101 @@
     });
 
 
-    const q = query(collection(db, 'actions'), where('category', '==', 'Four'));
-    onSnapshot(q, (snap) => {
-      const rows = snap.docs.map(d => d.data()).sort((a, b) => {
-        const ta = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
-        const tb = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : 0;
-        return tb - ta;
-      });
-      if (rows.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-2);">Aucune vente enregistrée pour l\'instant.</td></tr>';
+    const EDITOR_ROLES = ['admin', 'lead', 'co-lead', 'colead'];
+    const canEdit = EDITOR_ROLES.includes((currentUser.role || '').toLowerCase());
+
+    function normalRow(id, a) {
+      const initials = (a.username || '??').slice(0, 2).toUpperCase();
+      const date = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString('fr-FR') : '—';
+      const editBtn = canEdit ? `<button class="btn btn-secondary btn-sm" data-edit="${id}">Modifier</button>` : '';
+      const deleteBtn = canEdit ? `<button class="btn btn-danger btn-sm" data-delete="${id}">Supprimer</button>` : '';
+      return `<tr data-row="${id}">
+        <td><div class="user-cell"><span class="avatar">${initials}</span> ${a.username || 'Inconnu'}</div></td>
+        <td>${a.item || '—'}</td>
+        <td>${a.quantity || 1}</td>
+        <td>${a.pool === 'clean' ? 'Propre' : 'Sale'}</td>
+        <td>$${Number(a.amount || 0).toLocaleString('fr-FR')}</td>
+        <td>${date}</td>
+        <td style="white-space:nowrap;">${editBtn} ${deleteBtn}</td>
+      </tr>`;
+    }
+
+    function editRow(id, a) {
+      return `<tr data-row="${id}">
+        <td><input type="text" class="field-select" id="edit-username-${id}" value="${(a.username || '').replace(/"/g, '&quot;')}" style="padding:6px 8px; font-size:13px;"></td>
+        <td><input type="text" class="field-select" id="edit-item-${id}" value="${(a.item || '').replace(/"/g, '&quot;')}" style="padding:6px 8px; font-size:13px;"></td>
+        <td><input type="number" class="field-select" id="edit-qty-${id}" value="${a.quantity || 1}" min="1" style="padding:6px 8px; font-size:13px; width:70px;"></td>
+        <td>
+          <select id="edit-pool-${id}" class="field-select" style="padding:6px 8px; font-size:13px;">
+            <option value="dirty" ${a.pool !== 'clean' ? 'selected' : ''}>Sale</option>
+            <option value="clean" ${a.pool === 'clean' ? 'selected' : ''}>Propre</option>
+          </select>
+        </td>
+        <td><input type="number" class="field-select" id="edit-amount-${id}" value="${a.amount || 0}" min="0" style="padding:6px 8px; font-size:13px; width:90px;"></td>
+        <td colspan="2" style="white-space:nowrap;">
+          <button class="btn btn-primary btn-sm" data-save="${id}">Enregistrer</button>
+          <button class="btn btn-secondary btn-sm" data-cancel="${id}">Annuler</button>
+        </td>
+      </tr>`;
+    }
+
+    let allRows = [];
+    let editingId = null;
+
+    function renderJournal() {
+      if (allRows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="color:var(--text-2);">Aucune vente enregistrée pour l\'instant.</td></tr>';
         return;
       }
-      tbody.innerHTML = rows.map(a => {
-        const initials = (a.username || '??').slice(0, 2).toUpperCase();
-        const date = a.createdAt?.toDate ? a.createdAt.toDate().toLocaleString('fr-FR') : '—';
-        return `<tr>
-          <td><div class="user-cell"><span class="avatar">${initials}</span> ${a.username || 'Inconnu'}</div></td>
-          <td>${a.item || '—'}</td>
-          <td>${a.quantity || 1}</td>
-          <td>${a.pool === 'clean' ? 'Propre' : 'Sale'}</td>
-          <td>$${Number(a.amount || 0).toLocaleString('fr-FR')}</td>
-          <td>${date}</td>
-        </tr>`;
-      }).join('');
+      tbody.innerHTML = allRows.map(({ id, data }) =>
+        id === editingId ? editRow(id, data) : normalRow(id, data)
+      ).join('');
+
+      tbody.querySelectorAll('[data-edit]').forEach(btn => {
+        btn.addEventListener('click', () => { editingId = btn.dataset.edit; renderJournal(); });
+      });
+      tbody.querySelectorAll('[data-cancel]').forEach(btn => {
+        btn.addEventListener('click', () => { editingId = null; renderJournal(); });
+      });
+      tbody.querySelectorAll('[data-delete]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.delete;
+          if (!confirm('Supprimer cette vente ? Cette action est irréversible.')) return;
+          try {
+            await deleteDoc(doc(db, 'actions', id));
+          } catch (err) {
+            alert("Impossible de supprimer : " + err.message);
+          }
+        });
+      });
+      tbody.querySelectorAll('[data-save]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.save;
+          const username = document.getElementById(`edit-username-${id}`).value.trim();
+          const item = document.getElementById(`edit-item-${id}`).value.trim();
+          const quantity = Number(document.getElementById(`edit-qty-${id}`).value || 1);
+          const pool = document.getElementById(`edit-pool-${id}`).value;
+          const amount = Number(document.getElementById(`edit-amount-${id}`).value || 0);
+          try {
+            await updateDoc(doc(db, 'actions', id), { username, item, quantity, pool, amount });
+            editingId = null;
+          } catch (err) {
+            alert("Impossible de modifier : " + err.message);
+          }
+        });
+      });
+    }
+
+    const q = query(collection(db, 'actions'), where('category', '==', 'Four'));
+    onSnapshot(q, (snap) => {
+      allRows = snap.docs
+        .map(d => ({ id: d.id, data: d.data() }))
+        .sort((a, b) => {
+          const ta = a.data.createdAt?.toDate ? a.data.createdAt.toDate().getTime() : 0;
+          const tb = b.data.createdAt?.toDate ? b.data.createdAt.toDate().getTime() : 0;
+          return tb - ta;
+        });
+      renderJournal();
     });
   });
 </script>
