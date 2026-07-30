@@ -155,7 +155,7 @@
 
 <script type="module">
   import { requireAuth, currentUser } from "./js/auth-guard.js";
-  import { db, collection, addDoc, doc, updateDoc, increment, query, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
+  import { db, collection, addDoc, doc, updateDoc, deleteDoc, increment, query, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
 
   const ITEMS = {
     Ventes: ["Cocaïne", "Tranq", "Meth bleue", "Weed", "Purple", "Crack", "Mexicana", "Ecstasy", "Lean", "B-magic", "Carte prépayée", "Spore X", "Héroïne", "Branche"],
@@ -297,6 +297,7 @@
       const amountHtml = '$' + Number(a.amount || 0).toLocaleString('fr-FR');
       const pool = a.pool === 'clean' ? 'Propre' : 'Sale';
       const editBtn = canEdit ? `<button class="btn btn-secondary btn-sm" data-edit="${id}">Modifier</button>` : '';
+      const deleteBtn = canEdit ? `<button class="btn btn-danger btn-sm" data-delete="${id}">Supprimer</button>` : '';
       return `<tr data-row="${id}">
         <td><div class="user-cell"><span class="avatar">${initials}</span> ${a.username || 'Inconnu'}</div></td>
         <td><span class="badge">${a.category}</span></td>
@@ -305,7 +306,7 @@
         <td>${pool}</td>
         <td>${amountHtml}</td>
         <td>${date}</td>
-        <td>${editBtn}</td>
+        <td style="white-space:nowrap;">${editBtn} ${deleteBtn}</td>
       </tr>`;
     }
 
@@ -345,6 +346,17 @@
         btn.addEventListener('click', () => {
           editingId = btn.dataset.edit;
           render();
+        });
+      });
+      tbody.querySelectorAll('[data-delete]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.delete;
+          if (!confirm('Supprimer cette action ? Cette action est irréversible.')) return;
+          try {
+            await deleteDoc(doc(db, 'actions', id));
+          } catch (err) {
+            alert("Impossible de supprimer : " + err.message);
+          }
         });
       });
       tbody.querySelectorAll('[data-cancel]').forEach(btn => {
