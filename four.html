@@ -120,13 +120,17 @@
               </optgroup>
             </select>
           </div>
-          <div class="field">
+          <div class="field" id="fourQtyField">
             <label for="fourQty" id="fourQtyLabel">Nombre vendu</label>
-            <input id="fourQty" type="number" min="1" step="1" placeholder="1" required>
+            <input id="fourQty" type="number" min="1" step="1" placeholder="1">
           </div>
           <div class="field">
             <label for="fourAmount">Prix total ($)</label>
             <input id="fourAmount" type="number" min="0" placeholder="0" required>
+          </div>
+          <div class="field" id="fourBuyPriceField" style="display:none;">
+            <label for="fourBuyPrice">Prix d'achat unitaire ($) — optionnel</label>
+            <input id="fourBuyPrice" type="number" min="0" step="0.01" placeholder="Laisser vide si on l'a produite">
           </div>
           <div class="field">
             <label for="fourPool">Type d'argent</label>
@@ -135,9 +139,15 @@
               <option value="clean">Propre</option>
             </select>
           </div>
-          <div class="field" id="mateField" style="display:none;">
-            <label for="fourMate">Coéquipier (optionnel, 2 personnes max)</label>
-            <select id="fourMate" class="field-select"><option value="">Aucun</option></select>
+          <div id="mateFields" style="display:none;">
+            <div class="field">
+              <label for="fourMate1">Coéquipier 2 (optionnel)</label>
+              <select id="fourMate1" class="field-select"><option value="">Aucun</option></select>
+            </div>
+            <div class="field">
+              <label for="fourMate2">Coéquipier 3 (optionnel)</label>
+              <select id="fourMate2" class="field-select"><option value="">Aucun</option></select>
+            </div>
           </div>
           <button type="submit" class="btn btn-primary btn-block">Enregistrer</button>
         </form>
@@ -162,67 +172,98 @@
 
 <script type="module">
   import { requireAuth, currentUser } from "./js/auth-guard.js";
-  import { db, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
+  import { db, collection, addDoc, doc, updateDoc, increment, query, where, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
 
   requireAuth().then(() => {
     const form = document.getElementById('fourForm');
     const tbody = document.getElementById('fourTable');
     const itemSelect = document.getElementById('fourItem');
-    const qtyLabel = document.getElementById('fourQtyLabel');
-    const mateField = document.getElementById('mateField');
-    const mateSelect = document.getElementById('fourMate');
+    const qtyField = document.getElementById('fourQtyField');
+    const mateFields = document.getElementById('mateFields');
+    const mate1Select = document.getElementById('fourMate1');
+    const mate2Select = document.getElementById('fourMate2');
+    const buyPriceField = document.getElementById('fourBuyPriceField');
+    const buyPriceInput = document.getElementById('fourBuyPrice');
+    const poolSelect = document.getElementById('fourPool');
+
+    const DRUG_ITEMS = ["Cocaïne", "Tranq", "Meth bleue", "Weed", "Purple", "Crack", "Mexicana", "Ecstasy", "Lean", "B-magic", "Carte prépayée", "Spore X", "Héroïne"];
 
     let allUsers = [];
     onSnapshot(collection(db, 'users'), (snap) => {
       allUsers = snap.docs.map(d => d.data()).filter(u => u.username !== currentUser.username);
-      mateSelect.innerHTML = '<option value="">Aucun</option>' + allUsers.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+      const options = '<option value="">Aucun</option>' + allUsers.map(u => `<option value="${u.username}">${u.username}</option>`).join('');
+      mate1Select.innerHTML = options;
+      mate2Select.innerHTML = options;
     });
 
     itemSelect.addEventListener('change', () => {
       const isBranche = itemSelect.value === 'Branche';
-      qtyLabel.textContent = isBranche ? 'Nombre de graines plantées' : 'Nombre vendu';
-      mateField.style.display = isBranche ? 'block' : 'none';
+      // Pour la plantation, plus besoin du nombre de graines (coût fixe désormais).
+      qtyField.style.display = isBranche ? 'none' : 'block';
+      document.getElementById('fourQty').required = !isBranche;
+      mateFields.style.display = isBranche ? 'block' : 'none';
+      buyPriceField.style.display = DRUG_ITEMS.includes(itemSelect.value) ? 'block' : 'none';
     });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const item = document.getElementById('fourItem').value;
-      const quantity = Number(document.getElementById('fourQty').value || 0);
+      const isBranche = item === 'Branche';
+      const quantity = isBranche ? 1 : Number(document.getElementById('fourQty').value || 0);
       const totalAmount = Number(document.getElementById('fourAmount').value || 0);
-      const pool = document.getElementById('fourPool').value;
+      const buyPrice = DRUG_ITEMS.includes(item) ? Number(buyPriceInput.value || 0) : 0;
+      // Une drogue achetée pour être revendue plus cher, c'est de l'argent sale.
+      const pool = buyPrice > 0 ? 'dirty' : poolSelect.value;
 
-      if (!quantity || !totalAmount) {
+      if ((!isBranche && !quantity) || !totalAmount) {
         alert('Renseigne le nombre vendu et le prix total.');
         return;
       }
 
-      // La plantation (Branche) peut être partagée à 2 personnes max :
-      // l'argent rapporté ET le coût du matériel (pot + graines) sont
-      // alors divisés en 2.
+      // La plantation (Branche) peut être partagée à 3 personnes max :
+      // l'argent rapporté ET le coût du matériel sont alors divisés.
       let participants = [currentUser.username];
-      if (item === 'Branche' && mateSelect.value && mateSelect.value !== currentUser.username) {
-        participants.push(mateSelect.value);
+      if (isBranche) {
+        if (mate1Select.value && mate1Select.value !== currentUser.username) participants.push(mate1Select.value);
+        if (mate2Select.value && mate2Select.value !== currentUser.username && mate2Select.value !== mate1Select.value) participants.push(mate2Select.value);
       }
       const splitCount = participants.length;
-      const amount = totalAmount / splitCount;
+      // Celui/celle qui vend ne récolte que 50% du prix affiché (le reste
+      // reste à l'organisation), ensuite divisé entre coéquipiers si besoin.
+      const amount = (totalAmount * 0.5) / splitCount;
 
       for (const username of participants) {
         const u = username === currentUser.username ? currentUser : allUsers.find(x => x.username === username);
+        const participantUid = u?.uid || (username === currentUser.username ? currentUser.uid : null);
         await addDoc(collection(db, 'actions'), {
           username,
-          uid: u?.uid || (username === currentUser.username ? currentUser.uid : null),
+          uid: participantUid,
           category: 'Four',
           item,
           quantity,
           amount,
+          buyPrice,
           splitCount,
           pool,
           createdAt: serverTimestamp(),
         });
+        // Compteur permanent : n'augmente jamais en double, ne diminue
+        // jamais, même si l'action est ensuite modifiée ou supprimée.
+        if (participantUid) {
+          try {
+            await updateDoc(doc(db, 'users', participantUid), {
+              totalArgentRapporte: increment(amount),
+            });
+          } catch (err) {
+            console.error('Erreur mise à jour du total permanent :', err);
+          }
+        }
       }
 
       form.reset();
-      mateField.style.display = 'none';
+      qtyField.style.display = 'block';
+      mateFields.style.display = 'none';
+      buyPriceField.style.display = 'none';
     });
 
 
