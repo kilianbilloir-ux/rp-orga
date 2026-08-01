@@ -46,6 +46,11 @@
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
       Tableau de paye
     </a>
+    <a href="blanchiment.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="7" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="10" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+      Blanchissement
+    </a>
+
 
 
 
@@ -100,7 +105,7 @@
 
 <script type="module">
   import { requireAuth, currentUser } from "./js/auth-guard.js";
-  import { db, collection, doc, updateDoc, query, where, onSnapshot } from "./js/firebase-init.js";
+  import { db, collection, query, where, onSnapshot } from "./js/firebase-init.js";
 
   const WARN_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
   const OK_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-6"/></svg>';
@@ -112,20 +117,6 @@
     "Supérette": 3,
     "Cambu": 3,
   };
-
-  const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1530506907570274304/eKV0vr_Xox5mJNscu-fgdNUdFh8CMfzJQm-2HdnMTHBgj-2wCrRr6JZx6FoxuSMJmkgt";
-
-  async function sendDiscordMessage(content) {
-    try {
-      await fetch(DISCORD_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
-      });
-    } catch (e) {
-      console.error('Erreur webhook Discord :', e);
-    }
-  }
 
   requireAuth().then(() => {
     const list = document.getElementById('notifList');
@@ -163,16 +154,18 @@
 
     // Notification "tu peux refaire ça" : calculée en direct, elle n'apparaît
     // qu'une fois le délai (24h / 3h) réellement écoulé depuis l'action.
+    // L'envoi Discord est géré automatiquement côté serveur (Cloud Function
+    // programmée) — pas besoin d'ouvrir cette page pour qu'il parte.
     onSnapshot(query(collection(db, 'actions'), where('uid', '==', currentUser.uid)), (snap) => {
       const now = Date.now();
       const withCooldown = snap.docs
-        .map(d => ({ id: d.id, ...d.data() }))
+        .map(d => d.data())
         .filter(a => COOLDOWN_HOURS[a.item])
         .map(a => {
           const doneAt = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
           const cooldown = COOLDOWN_HOURS[a.item];
           const availableAt = doneAt + cooldown * 3600 * 1000;
-          return { id: a.id, item: a.item, doneAt, availableAt, discordNotified: a.discordNotified === true };
+          return { item: a.item, doneAt, availableAt };
         })
         .filter(a => now >= a.availableAt);
 
@@ -190,21 +183,6 @@
         date: fmt(a.availableAt),
       }));
       render();
-
-      // Envoie sur Discord une seule fois par action (marquée dans Firestore
-      // pour éviter les doublons, même si plusieurs personnes ont la page
-      // ouverte ou si elle se recharge).
-      withCooldown.filter(a => !a.discordNotified).forEach(async (a) => {
-        try {
-          await updateDoc(doc(db, 'actions', a.id), { discordNotified: true });
-          const who = currentUser.discordId
-            ? `<@${currentUser.discordId}>`
-            : `**${currentUser.username}**`;
-          await sendDiscordMessage(`✅ ${who} peut maintenant refaire un(e) **${a.item}** !`);
-        } catch (e) {
-          console.error('Erreur notification Discord :', e);
-        }
-      });
     });
 
     // Recalcule toutes les minutes pour faire apparaître les notifications
