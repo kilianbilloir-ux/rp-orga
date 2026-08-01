@@ -46,6 +46,11 @@
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
       Tableau de paye
     </a>
+    <a href="blanchiment.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="7" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="10" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+      Blanchissement
+    </a>
+
 
 
     <a href="comptabilite.html" class="side-link">
@@ -120,17 +125,23 @@
           && a.countsAsActivity !== false
         ).length;
         const money = mine.reduce((s, a) => s + Number(a.amount || 0), 0);
-        return { username: u.username, count, money };
+        // Compteur permanent stocké sur le profil : n'augmente qu'à chaque
+        // nouvelle action, ne diminue jamais (même si une action est
+        // ensuite modifiée ou supprimée par le staff).
+        const totalAllTime = Number(u.totalArgentRapporte || 0);
+        return { username: u.username, count, money, totalAllTime };
       });
 
       const maxCount = Math.max(1, ...stats.map(s => s.count));
       const maxMoney = Math.max(1, ...stats.map(s => s.money));
+      const maxTotalAllTime = Math.max(1, ...stats.map(s => s.totalAllTime));
 
       stats.sort((a, b) => b.money - a.money);
 
       container.innerHTML = stats.map((s, i) => {
         const countPct = Math.round((s.count / maxCount) * 100);
         const moneyPct = Math.round((s.money / maxMoney) * 100);
+        const totalAllTimePct = Math.round((s.totalAllTime / maxTotalAllTime) * 100);
         const initials = s.username.slice(0, 2).toUpperCase();
         return `
           <div style="padding:16px 4px; border-bottom:1px solid var(--border);">
@@ -150,8 +161,15 @@
             <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-2); margin-bottom:4px;">
               <span>Argent rapporté</span><span>$${s.money.toLocaleString('fr-FR')} — ${moneyPct}%</span>
             </div>
-            <div style="background:var(--bg-1); border-radius:999px; height:8px; overflow:hidden;">
+            <div style="background:var(--bg-1); border-radius:999px; height:8px; overflow:hidden; margin-bottom:12px;">
               <div style="width:${moneyPct}%; height:100%; background:var(--green);"></div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-2); margin-bottom:4px;">
+              <span>Argent rapporté total (depuis le début)</span><span>$${s.totalAllTime.toLocaleString('fr-FR')} — ${totalAllTimePct}%</span>
+            </div>
+            <div style="background:var(--bg-1); border-radius:999px; height:8px; overflow:hidden;">
+              <div style="width:${totalAllTimePct}%; height:100%; background:var(--orange);"></div>
             </div>
           </div>
         `;
