@@ -218,7 +218,9 @@
         const materielPropre = mine.filter(isClean).reduce((s, a) => s + materialCostOf(a), 0);
 
         // Paie = 70% du (brut - matériel sale), puis on retire le matériel propre.
-        const paie = ((brut - materielSale) * NET_RATE) - materielPropre;
+        // Paie = 70% x 70% (soit 49%) du (brut - matériel sale), puis on
+        // retire le matériel propre.
+        const paie = ((brut - materielSale) * NET_RATE * NET_RATE) - materielPropre;
 
         // Regroupe le détail par catégorie puis par item.
         const grouped = {};
@@ -271,7 +273,7 @@
               <div class="stat-tile">
                 <div class="label">Paie (net final)</div>
                 <div class="value" style="font-size:20px; color:${paie >= 0 ? 'var(--green)' : 'var(--red)'};">${money(paie)}</div>
-                <div class="sub">70% × (brut − matériel sale) − matériel propre</div>
+                <div class="sub">70% × 70% × (brut − matériel sale) − matériel propre</div>
               </div>
             </div>
 
