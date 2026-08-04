@@ -163,7 +163,7 @@
         </div>
       </div>
 
-      <h3 style="margin-bottom:10px;">Argent du groupe <span style="color:var(--text-2); font-weight:500; font-size:13px;">— 30% du bénéfice sale non reversé en paye</span></h3>
+      <h3 style="margin-bottom:10px;">Argent du groupe <span style="color:var(--text-2); font-weight:500; font-size:13px;">— 30% du bénéfice (sale + propre) non reversé en paye</span></h3>
       <div class="stat-grid" style="grid-template-columns: repeat(1, 1fr); margin-bottom:24px;">
         <div class="stat-tile">
           <div class="value" style="color:var(--green);" id="groupMoney">—</div>
@@ -300,9 +300,10 @@
       cleanProfitEl.textContent = money(weekCleanProfit);
       cleanProfitEl.style.color = weekCleanProfit >= 0 ? 'var(--green)' : 'var(--red)';
 
-      // Argent du groupe : les 30% du bénéfice sale qui ne sont pas
-      // reversés en paye (le Tableau de paye ne verse que 70% du brut sale).
-      const groupMoney = weekDirtyProfit * 0.3;
+      // Argent du groupe : les 30% du bénéfice (sale ET propre) qui ne
+      // sont pas reversés en paye (le Tableau de paye ne verse que 70%
+      // du brut, toutes caisses confondues).
+      const groupMoney = (weekDirtyProfit + weekCleanProfit) * 0.3;
       document.getElementById('groupMoney').textContent = money(groupMoney);
 
       const tx = [
