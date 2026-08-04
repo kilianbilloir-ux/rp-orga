@@ -163,11 +163,17 @@
         </div>
       </div>
 
-      <h3 style="margin-bottom:10px;">Argent du groupe <span style="color:var(--text-2); font-weight:500; font-size:13px;">— 30% du bénéfice (sale + propre) non reversé en paye</span></h3>
-      <div class="stat-grid" style="grid-template-columns: repeat(1, 1fr); margin-bottom:24px;">
+      <h3 style="margin-bottom:10px;">Argent du groupe <span style="color:var(--text-2); font-weight:500; font-size:13px;">— 30% non reversé en paye, accumulé dans le temps</span></h3>
+      <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom:24px;">
         <div class="stat-tile">
-          <div class="value" style="color:var(--green);" id="groupMoney">—</div>
-          <div class="sub">Cette semaine — les 70% restants vont dans le Tableau de paye</div>
+          <div class="label">Sale</div>
+          <div class="value" style="color:var(--red);" id="groupDirty">—</div>
+          <div class="sub">Blanchissable</div>
+        </div>
+        <div class="stat-tile">
+          <div class="label">Propre</div>
+          <div class="value" style="color:var(--green);" id="groupClean">—</div>
+          <div class="sub">Depuis le début</div>
         </div>
       </div>
 
@@ -282,6 +288,8 @@
       // Argent rapporté total — depuis le tout début, ne se réinitialise jamais.
       const allTimeDirtyIncome = sum(actions.filter(a => poolOfAction(a) === 'dirty'));
       const allTimeCleanIncome = sum(actions.filter(a => poolOfAction(a) === 'clean'));
+      const allTimeDirtyExpenses = sum(expenses.filter(e => (e.pool || 'dirty') === 'dirty'));
+      const allTimeCleanExpenses = sum(expenses.filter(e => e.pool === 'clean'));
 
       document.getElementById('totalDirty').textContent = money(totalDirty);
       document.getElementById('totalClean').textContent = money(totalClean);
@@ -300,11 +308,15 @@
       cleanProfitEl.textContent = money(weekCleanProfit);
       cleanProfitEl.style.color = weekCleanProfit >= 0 ? 'var(--green)' : 'var(--red)';
 
-      // Argent du groupe : les 30% du bénéfice (sale ET propre) qui ne
-      // sont pas reversés en paye (le Tableau de paye ne verse que 70%
-      // du brut, toutes caisses confondues).
-      const groupMoney = (weekDirtyProfit + weekCleanProfit) * 0.3;
-      document.getElementById('groupMoney').textContent = money(groupMoney);
+      // Argent du groupe : 30% du bénéfice total (sale et propre séparément),
+      // accumulé depuis le début — pas juste cette semaine. Le blanchiment
+      // vient piocher dans le sale du groupe pour le transformer en propre.
+      const launderedDirty = launderings.reduce((s, b) => s + Number(b.dirtyAmount || 0), 0);
+      const launderedClean = launderings.reduce((s, b) => s + Number(b.cleanAmount || 0), 0);
+      const groupDirty = (allTimeDirtyIncome - allTimeDirtyExpenses) * 0.3 - launderedDirty;
+      const groupClean = (allTimeCleanIncome - allTimeCleanExpenses) * 0.3 + launderedClean;
+      document.getElementById('groupDirty').textContent = money(groupDirty);
+      document.getElementById('groupClean').textContent = money(groupClean);
 
       const tx = [
         ...actions.map(a => ({
