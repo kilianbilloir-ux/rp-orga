@@ -168,7 +168,7 @@
         <div class="stat-tile">
           <div class="label">Sale</div>
           <div class="value" style="color:var(--red);" id="groupDirty">—</div>
-          <div class="sub">Blanchissable</div>
+          <div class="sub">Depuis le début</div>
         </div>
         <div class="stat-tile">
           <div class="label">Propre</div>
@@ -309,12 +309,11 @@
       cleanProfitEl.style.color = weekCleanProfit >= 0 ? 'var(--green)' : 'var(--red)';
 
       // Argent du groupe : 30% du bénéfice total (sale et propre séparément),
-      // accumulé depuis le début — pas juste cette semaine. Le blanchiment
-      // vient piocher dans le sale du groupe pour le transformer en propre.
-      const launderedDirty = launderings.reduce((s, b) => s + Number(b.dirtyAmount || 0), 0);
-      const launderedClean = launderings.reduce((s, b) => s + Number(b.cleanAmount || 0), 0);
-      const groupDirty = (allTimeDirtyIncome - allTimeDirtyExpenses) * 0.3 - launderedDirty;
-      const groupClean = (allTimeCleanIncome - allTimeCleanExpenses) * 0.3 + launderedClean;
+      // accumulé depuis le début. C'est juste un compteur informatif, il ne
+      // bouge jamais avec le blanchiment (ni avec rien d'autre) : il ne peut
+      // qu'augmenter avec les nouvelles actions.
+      const groupDirty = (allTimeDirtyIncome - allTimeDirtyExpenses) * 0.3;
+      const groupClean = (allTimeCleanIncome - allTimeCleanExpenses) * 0.3;
       document.getElementById('groupDirty').textContent = money(groupDirty);
       document.getElementById('groupClean').textContent = money(groupClean);
 
