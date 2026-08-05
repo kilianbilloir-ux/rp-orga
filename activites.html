@@ -112,7 +112,7 @@
           </div>
 
           <div class="field" id="qtyField" style="display:none;">
-            <label for="qty">Nombre vendu</label>
+            <label for="qty" id="qtyLabel">Nombre vendu</label>
             <input id="qty" type="number" min="1" step="1" placeholder="1">
           </div>
 
@@ -163,7 +163,7 @@
   import { db, collection, addDoc, doc, updateDoc, deleteDoc, increment, query, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
 
   const ITEMS = {
-    Ventes: ["Cocaïne", "Tranq", "Meth bleue", "Weed", "Purple", "Crack", "Mexicana", "Ecstasy", "Lean", "B-magic", "Carte prépayée", "Spore X", "Héroïne", "Branche"],
+    Ventes: ["Cocaïne", "Tranq", "Meth bleue", "Weed", "Purple", "Crack", "Mexicana", "Ecstasy", "Lean", "B-magic", "Carte prépayée", "Spore X", "Héroïne", "Branche", "Champignons"],
     Braquage: ["Supérette", "Fleeca", "Armurerie"],
     Actions: ["ATM", "Cambu", "Go fast", "Rentrée d'argent"],
   };
@@ -175,8 +175,9 @@
   // Ces items peuvent être partagés entre coéquipiers : l'argent rapporté
   // (et le coût matériel s'il y en a un) est alors divisé entre eux.
   // Fleeca/Armurerie : jusqu'à 3 personnes. Branche : 2 personnes max.
-  const SHARABLE_ITEMS = ["Fleeca", "Armurerie", "Branche"];
+  const SHARABLE_ITEMS = ["Fleeca", "Armurerie", "Branche", "Champignons"];
   const SINGLE_MATE_ITEMS = ["Branche"];
+  const NO_BUY_PRICE_ITEMS = ["Branche", "Champignons"];
 
   const EDITOR_ROLES = ['admin', 'lead', 'co-lead', 'colead'];
 
@@ -187,6 +188,7 @@
     const itemField = document.getElementById('itemField');
     const itemSelect = document.getElementById('item');
     const qtyField = document.getElementById('qtyField');
+    const qtyLabel = document.getElementById('qtyLabel');
     const qtyInput = document.getElementById('qty');
     const buyPriceField = document.getElementById('buyPriceField');
     const buyPriceInput = document.getElementById('buyPrice');
@@ -210,8 +212,9 @@
       const item = itemSelect.value;
       mateFields.style.display = SHARABLE_ITEMS.includes(item) ? 'block' : 'none';
       mate2Field.style.display = SINGLE_MATE_ITEMS.includes(item) ? 'none' : 'block';
-      // Branche : coût fixe (10800$), pas de prix d'achat unitaire à saisir.
-      if (item === 'Branche') buyPriceField.style.display = 'none';
+      // Branche / Champignons : pas de prix d'achat unitaire à saisir.
+      if (NO_BUY_PRICE_ITEMS.includes(item)) buyPriceField.style.display = 'none';
+      qtyLabel.textContent = (item === 'Champignons') ? 'Nombre récolté' : 'Nombre vendu';
     }
 
     categorySelect.addEventListener('change', () => {
