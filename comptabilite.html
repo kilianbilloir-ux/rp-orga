@@ -164,12 +164,7 @@
       </div>
 
       <h3 style="margin-bottom:10px;">Argent du groupe <span style="color:var(--text-2); font-weight:500; font-size:13px;">— 30% non reversé en paye, accumulé dans le temps</span></h3>
-      <div class="stat-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom:24px;">
-        <div class="stat-tile">
-          <div class="label">Sale</div>
-          <div class="value" style="color:var(--red);" id="groupDirty">—</div>
-          <div class="sub">Depuis le début</div>
-        </div>
+      <div class="stat-grid" style="grid-template-columns: repeat(1, 1fr); margin-bottom:24px;">
         <div class="stat-tile">
           <div class="label">Propre</div>
           <div class="value" style="color:var(--green);" id="groupClean">—</div>
@@ -269,12 +264,14 @@
 
       // Argent total — mis à jour en direct (tout l'historique), sale / propre.
       // Le blanchiment retire du sale et ajoute du propre (le pourcentage
-      // non converti est la "perte" du blanchiment).
+      // non converti est la "perte" du blanchiment). Une dépense propre
+      // n'impacte l'argent normal (total) qu'à hauteur de 70% ; les 30%
+      // restants sont pris sur l'argent du groupe (voir plus bas).
       const totalDirty = sum(actions.filter(a => poolOfAction(a) === 'dirty'))
         - sum(expenses.filter(e => (e.pool || 'dirty') === 'dirty'))
         - launderings.reduce((s, b) => s + Number(b.dirtyAmount || 0), 0);
       const totalClean = sum(actions.filter(a => poolOfAction(a) === 'clean'))
-        - sum(expenses.filter(e => e.pool === 'clean'))
+        - (sum(expenses.filter(e => e.pool === 'clean')) * 0.7)
         + launderings.reduce((s, b) => s + Number(b.cleanAmount || 0), 0);
 
       // Cette semaine — sale / propre.
@@ -308,13 +305,10 @@
       cleanProfitEl.textContent = money(weekCleanProfit);
       cleanProfitEl.style.color = weekCleanProfit >= 0 ? 'var(--green)' : 'var(--red)';
 
-      // Argent du groupe : 30% du bénéfice total (sale et propre séparément),
-      // accumulé depuis le début. C'est juste un compteur informatif, il ne
-      // bouge jamais avec le blanchiment (ni avec rien d'autre) : il ne peut
-      // qu'augmenter avec les nouvelles actions.
-      const groupDirty = (allTimeDirtyIncome - allTimeDirtyExpenses) * 0.3;
+      // Argent du groupe (propre) : 30% du rapporté, moins 30% des dépenses
+      // propres (l'autre 70% de la dépense est pris sur l'argent normal
+      // ci-dessus). Compteur qui ne bouge jamais avec le blanchiment.
       const groupClean = (allTimeCleanIncome - allTimeCleanExpenses) * 0.3;
-      document.getElementById('groupDirty').textContent = money(groupDirty);
       document.getElementById('groupClean').textContent = money(groupClean);
 
       const tx = [
