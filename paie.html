@@ -110,10 +110,14 @@
   // Coût en objets/matériel consommé par action, déduit du salaire.
   // À compléter au fur et à mesure (les items non listés ici coûtent 0).
   const ITEM_COST = {
-    "ATM": 350,
+    "ATM": 240,
     "Cambu": 150,
     "Fleeca": 7000,
   };
+
+  // Ces items déduisent toujours leur coût matériel du "propre", peu
+  // importe la caisse (sale/propre) choisie pour l'argent rapporté lui-même.
+  const FORCE_CLEAN_MATERIAL_ITEMS = ["ATM"];
 
   // Calcule le coût matériel d'une action précise :
   // - Branche : 10800$ fixe, peu importe le nombre de branches
@@ -205,10 +209,13 @@
         const mine = weekActions.filter(a => a.username === u.username);
 
         const isClean = a => a.pool === 'clean';
+        // Le matériel de certains items (ATM) est toujours payé en propre,
+        // même si l'argent rapporté par l'action lui-même est classé sale.
+        const materialGoesClean = a => FORCE_CLEAN_MATERIAL_ITEMS.includes(a.item) || isClean(a);
 
         const brut = mine.reduce((s, a) => s + Number(a.amount || 0), 0);
-        const materielSale = mine.filter(a => !isClean(a)).reduce((s, a) => s + materialCostOf(a), 0);
-        const materielPropre = mine.filter(isClean).reduce((s, a) => s + materialCostOf(a), 0);
+        const materielSale = mine.filter(a => !materialGoesClean(a)).reduce((s, a) => s + materialCostOf(a), 0);
+        const materielPropre = mine.filter(materialGoesClean).reduce((s, a) => s + materialCostOf(a), 0);
 
         // Paie = 70% du (brut - matériel sale), puis on retire le matériel propre.
         // Paie = 70% x 70% (soit 49%) du (brut - matériel sale), puis on
