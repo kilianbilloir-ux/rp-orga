@@ -265,13 +265,13 @@
       // Argent total — mis à jour en direct (tout l'historique), sale / propre.
       // Le blanchiment retire du sale et ajoute du propre (le pourcentage
       // non converti est la "perte" du blanchiment). Une dépense propre
-      // n'impacte l'argent normal (total) qu'à hauteur de 70% ; les 30%
-      // restants sont pris sur l'argent du groupe (voir plus bas).
+      // impacte l'argent normal (total) à 100% ; elle n'impacte pas du
+      // tout "Argent du groupe" (voir plus bas).
       const totalDirty = sum(actions.filter(a => poolOfAction(a) === 'dirty'))
         - sum(expenses.filter(e => (e.pool || 'dirty') === 'dirty'))
         - launderings.reduce((s, b) => s + Number(b.dirtyAmount || 0), 0);
       const totalClean = sum(actions.filter(a => poolOfAction(a) === 'clean'))
-        - (sum(expenses.filter(e => e.pool === 'clean')) * 0.7)
+        - sum(expenses.filter(e => e.pool === 'clean'))
         + launderings.reduce((s, b) => s + Number(b.cleanAmount || 0), 0);
 
       // Cette semaine — sale / propre.
@@ -305,10 +305,9 @@
       cleanProfitEl.textContent = money(weekCleanProfit);
       cleanProfitEl.style.color = weekCleanProfit >= 0 ? 'var(--green)' : 'var(--red)';
 
-      // Argent du groupe (propre) : 30% du rapporté, moins 30% des dépenses
-      // propres (l'autre 70% de la dépense est pris sur l'argent normal
-      // ci-dessus). Compteur qui ne bouge jamais avec le blanchiment.
-      const groupClean = (allTimeCleanIncome - allTimeCleanExpenses) * 0.3;
+      // Argent du groupe (propre) : 30% de l'argent rapporté. Les dépenses
+      // ne l'impactent jamais (elles ne touchent que l'argent normal ci-dessus).
+      const groupClean = allTimeCleanIncome * 0.3;
       document.getElementById('groupClean').textContent = money(groupClean);
 
       const tx = [
