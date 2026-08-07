@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GTA RP ORG — Entrepôts</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+  <aside class="sidebar">
+    <div class="brand"><span><span class="brand-mark">G</span> GTA RP ORG</span><button class="sidebar-close" id="sidebarClose" aria-label="Fermer le menu"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M6 18L18 6"/></svg></button></div>
+    <a href="dashboard.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Tableau de bord
+    </a>
+    <a href="activites.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Activités
+    </a>
+    <a href="four.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V10l7-7 7 7v11"/><path d="M9 21v-6h6v6"/></svg>
+      Four
+    </a>
+    <a href="entrepots.html" class="side-link active">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8L12 2 3 8v13h18V8z"/><path d="M3 8l9 6 9-6"/></svg>
+      Entrepôts
+    </a>
+    <a href="membres.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Membres
+    </a>
+    <a href="scores.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-6"/></svg>
+      Tableau des scores
+    </a>
+    <a href="recap.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Récap hebdo
+    </a>
+    <a href="paie.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      Tableau de paye
+    </a>
+    <a href="blanchiment.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/><circle cx="7" cy="6" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="10" cy="18" r="1.5" fill="currentColor" stroke="none"/></svg>
+      Blanchissement
+    </a>
+
+
+    <a href="comptabilite.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Comptabilité
+    </a>
+    <a href="admin.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      Admin
+    </a>
+
+    <a href="notifications.html" class="side-link">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Notifications
+    </a>
+    <div class="sidebar-footer">
+      <button data-logout class="btn btn-danger btn-block btn-sm">Déconnexion</button>
+    </div>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Ouvrir le menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <span class="brand"><span class="brand-mark">G</span> GTA RP ORG</span>
+      </div>
+      <a href="notifications.html" class="bell" aria-label="Notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="dot"></span>
+      </a>
+    </header>
+
+    <main class="page">
+      <div class="page-header">
+        <h1>Entrepôts</h1>
+        <p>Ce qui a été pris ou posé dans les entrepôts du jeu, en direct.</p>
+      </div>
+
+      <div class="card">
+        <div id="entrepotsList">
+          <p style="color:var(--text-2);">Chargement...</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+
+<script type="module">
+  import { requireAuth } from "./js/auth-guard.js";
+  import { db, collection, query, orderBy, limit, onSnapshot } from "./js/firebase-init.js";
+
+  requireAuth().then(() => {
+    const container = document.getElementById('entrepotsList');
+
+    const q = query(collection(db, 'entrepots'), orderBy('receivedAt', 'desc'), limit(100));
+    onSnapshot(q, (snap) => {
+      if (snap.empty) {
+        container.innerHTML = '<p style="color:var(--text-2);">Rien reçu pour l\'instant. Une fois le webhook configuré côté jeu, les prises/dépôts apparaîtront ici automatiquement.</p>';
+        return;
+      }
+
+      container.innerHTML = snap.docs.map(d => {
+        const e = d.data();
+        const date = e.receivedAt?.toDate ? e.receivedAt.toDate().toLocaleString('fr-FR') : '—';
+        const badge = e.action === 'pris'
+          ? '<span class="badge" style="background:rgba(239,68,68,0.12); color:var(--red);">Pris</span>'
+          : e.action === 'pose'
+            ? '<span class="badge">Posé</span>'
+            : '<span class="badge staff">Inconnu</span>';
+        const text = e.text ? e.text.slice(0, 300) : '(pas de texte lisible)';
+        return `
+          <div style="padding:12px 4px; border-bottom:1px solid var(--border);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              ${badge}
+              <span style="color:var(--text-3); font-size:12px;">${date}</span>
+            </div>
+            <div style="color:var(--text-1); font-size:13.5px;">${text}</div>
+            <details style="margin-top:6px;">
+              <summary style="color:var(--text-3); font-size:11px; cursor:pointer;">Voir les données brutes</summary>
+              <pre style="white-space:pre-wrap; word-break:break-all; color:var(--text-2); font-size:11px; background:var(--bg-1); padding:8px; border-radius:6px; margin-top:6px;">${JSON.stringify(e.raw, null, 2)}</pre>
+            </details>
+          </div>
+        `;
+      }).join('');
+    });
+  });
+</script>
+<script src="js/mobile-nav.js"></script>
+</body>
+</html>
