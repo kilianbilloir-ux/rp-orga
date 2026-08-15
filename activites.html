@@ -92,6 +92,12 @@
         <p>Enregistre les ventes, braquages et actions réalisés sur le serveur.</p>
       </div>
 
+      <div class="card" id="countdownCard" style="display:none; max-width:480px; margin-bottom:20px;">
+        <h3>Délais en cours</h3>
+        <p class="card-sub">Temps restant avant de pouvoir refaire chaque action.</p>
+        <div id="countdownList"></div>
+      </div>
+
       <div class="card" style="max-width:480px; margin-bottom:20px;">
         <h3>Enregistrer une action</h3>
         <p class="card-sub">Choisis une catégorie, puis précise laquelle.</p>
@@ -160,7 +166,15 @@
 
 <script type="module">
   import { requireAuth, currentUser } from "./js/auth-guard.js";
-  import { db, collection, addDoc, doc, updateDoc, deleteDoc, increment, query, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
+  import { db, collection, addDoc, doc, updateDoc, deleteDoc, increment, query, where, orderBy, onSnapshot, serverTimestamp } from "./js/firebase-init.js";
+
+  // Délai (en heures) avant de pouvoir refaire la même action.
+  const COOLDOWN_HOURS = {
+    "Go fast": 24,
+    "ATM": 3,
+    "Supérette": 3,
+    "Cambu": 3,
+  };
 
   const ITEMS = {
     Ventes: ["Cocaïne", "Tranq", "Meth bleue", "Weed", "Purple", "Crack", "Mexicana", "Ecstasy", "Lean", "B-magic", "Carte prépayée", "Spore X", "Héroïne", "Branche", "Champignons"],
@@ -396,6 +410,71 @@
       allActions = snap.docs.map(d => ({ id: d.id, data: d.data() }));
       render();
     });
+
+    // ---- Délais en cours (compte à rebours) ----
+    let pendingCooldowns = [];
+
+    function formatDuration(ms) {
+      if (ms <= 0) return '00:00:00';
+      const totalSeconds = Math.floor(ms / 1000);
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = totalSeconds % 60;
+      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function renderCountdowns() {
+      const card = document.getElementById('countdownCard');
+      const list = document.getElementById('countdownList');
+      if (pendingCooldowns.length === 0) {
+        card.style.display = 'none';
+        return;
+      }
+      card.style.display = 'block';
+      list.innerHTML = pendingCooldowns.map(a => `
+        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 4px; border-bottom:1px solid var(--border);">
+          <span style="color:var(--text-0); font-weight:600;">${a.item}</span>
+          <span style="font-family:var(--font-display); font-weight:700; color:var(--green);" data-countdown="${a.item}" data-until="${a.availableAt}">--:--:--</span>
+        </div>
+      `).join('');
+    }
+
+    onSnapshot(query(collection(db, 'actions'), where('uid', '==', currentUser.uid)), (snap) => {
+      const now = Date.now();
+      const latestPerItem = snap.docs
+        .map(d => d.data())
+        .filter(a => COOLDOWN_HOURS[a.item])
+        .map(a => {
+          const doneAt = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+          const cooldown = COOLDOWN_HOURS[a.item];
+          return { item: a.item, doneAt, availableAt: doneAt + cooldown * 3600 * 1000 };
+        })
+        .reduce((acc, a) => {
+          if (!acc[a.item] || a.doneAt > acc[a.item].doneAt) acc[a.item] = a;
+          return acc;
+        }, {});
+
+      pendingCooldowns = Object.values(latestPerItem).filter(a => now < a.availableAt);
+      renderCountdowns();
+    });
+
+    setInterval(() => {
+      const now = Date.now();
+      let anyJustFinished = false;
+      document.querySelectorAll('[data-countdown]').forEach((el) => {
+        const until = Number(el.dataset.until);
+        const remaining = until - now;
+        if (remaining <= 0) {
+          anyJustFinished = true;
+        } else {
+          el.textContent = formatDuration(remaining);
+        }
+      });
+      if (anyJustFinished) {
+        pendingCooldowns = pendingCooldowns.filter(a => a.availableAt > now);
+        renderCountdowns();
+      }
+    }, 1000);
   });
 </script>
 <script src="js/mobile-nav.js"></script>
