@@ -92,12 +92,6 @@
         <p>Bannissements et délais avant de pouvoir refaire une action.</p>
       </div>
 
-      <div class="card" id="countdownCard" style="display:none; margin-bottom:20px;">
-        <h3>Délais en cours</h3>
-        <p class="card-sub">Temps restant avant de pouvoir refaire chaque action.</p>
-        <div id="countdownList"></div>
-      </div>
-
       <div class="notif-list" id="notifList">
         <div class="notif-item">
           <div class="notif-icon info">…</div>
@@ -162,11 +156,9 @@
     // qu'une fois le délai (24h / 3h) réellement écoulé depuis l'action.
     // L'envoi Discord est géré automatiquement côté serveur (Cloud Function
     // programmée) — pas besoin d'ouvrir cette page pour qu'il parte.
-    let pendingCooldowns = [];
-
     onSnapshot(query(collection(db, 'actions'), where('uid', '==', currentUser.uid)), (snap) => {
       const now = Date.now();
-      const allWithCooldown = snap.docs
+      const withCooldown = snap.docs
         .map(d => d.data())
         .filter(a => COOLDOWN_HOURS[a.item])
         .map(a => {
@@ -174,78 +166,24 @@
           const cooldown = COOLDOWN_HOURS[a.item];
           const availableAt = doneAt + cooldown * 3600 * 1000;
           return { item: a.item, doneAt, availableAt };
-        });
+        })
+        .filter(a => now >= a.availableAt);
 
-      // Ne garde que la dernière action par item (pas besoin de répéter
-      // plusieurs fois le même item).
-      const latestPerItem = allWithCooldown.reduce((acc, a) => {
+      // Ne garde que la dernière action par item pour l'affichage (pas besoin
+      // de répéter le message plusieurs fois pour le même item).
+      const latestPerItem = withCooldown.reduce((acc, a) => {
         if (!acc[a.item] || a.doneAt > acc[a.item].doneAt) acc[a.item] = a;
         return acc;
       }, {});
-      const latest = Object.values(latestPerItem);
 
-      cooldownsReady = latest
-        .filter(a => now >= a.availableAt)
-        .map(a => ({
-          type: 'cooldown',
-          message: `Tu peux maintenant refaire un(e) ${a.item} !`,
-          ts: a.availableAt,
-          date: fmt(a.availableAt),
-        }));
-
-      pendingCooldowns = latest.filter(a => now < a.availableAt);
-
+      cooldownsReady = Object.values(latestPerItem).map(a => ({
+        type: 'cooldown',
+        message: `Tu peux maintenant refaire un(e) ${a.item} !`,
+        ts: a.availableAt,
+        date: fmt(a.availableAt),
+      }));
       render();
-      renderCountdowns();
     });
-
-    function formatDuration(ms) {
-      if (ms <= 0) return '00:00:00';
-      const totalSeconds = Math.floor(ms / 1000);
-      const h = Math.floor(totalSeconds / 3600);
-      const m = Math.floor((totalSeconds % 3600) / 60);
-      const s = totalSeconds % 60;
-      return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-    }
-
-    function renderCountdowns() {
-      const card = document.getElementById('countdownCard');
-      const list = document.getElementById('countdownList');
-
-      if (pendingCooldowns.length === 0) {
-        card.style.display = 'none';
-        return;
-      }
-      card.style.display = 'block';
-
-      list.innerHTML = pendingCooldowns.map(a => `
-        <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 4px; border-bottom:1px solid var(--border);">
-          <span style="color:var(--text-0); font-weight:600;">${a.item}</span>
-          <span style="font-family:var(--font-display); font-weight:700; color:var(--green);" data-countdown="${a.item}" data-until="${a.availableAt}">--:--:--</span>
-        </div>
-      `).join('');
-    }
-
-    // Met à jour les comptes à rebours affichés chaque seconde.
-    setInterval(() => {
-      const now = Date.now();
-      let anyJustFinished = false;
-      document.querySelectorAll('[data-countdown]').forEach((el) => {
-        const until = Number(el.dataset.until);
-        const remaining = until - now;
-        if (remaining <= 0) {
-          anyJustFinished = true;
-        } else {
-          el.textContent = formatDuration(remaining);
-        }
-      });
-      // Un délai vient de se terminer pendant que la page est ouverte :
-      // on relance le calcul pour le faire basculer en notification "prêt".
-      if (anyJustFinished) {
-        pendingCooldowns = pendingCooldowns.filter(a => a.availableAt > now);
-        renderCountdowns();
-      }
-    }, 1000);
 
     // Recalcule toutes les minutes pour faire apparaître les notifications
     // dès que leur délai se termine, sans avoir à recharger la page.
