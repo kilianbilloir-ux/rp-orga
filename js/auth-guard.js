@@ -1,14 +1,18 @@
 // js/auth-guard.js
 // À importer sur toutes les pages protégées (dashboard, activités, membres,
-// comptabilité, admin, notifications).
+// comptabilité, admin, notifications...).
 // Redirige vers login.html si personne n'est connecté, bloque les comptes bannis,
-// branche les boutons "Déconnexion", et écoute en direct le profil Firestore
-// (users/{uid}) : tout ce qui y est modifié depuis la console Firebase
-// (rôle, organisation, heures de jeu...) se met à jour automatiquement ici.
+// branche les boutons "Déconnexion", écoute en direct le profil Firestore
+// (users/{uid}), et vérifie à chaque ouverture de page si un délai (ATM,
+// Cambu, Supérette, Go fast) vient de se terminer pour envoyer le message
+// Discord — comme ça, ouvrir n'importe quel onglet du site suffit à
+// déclencher l'envoi, pas besoin d'aller spécifiquement sur Notifications.
 
 import {
   auth, db, signOut, onAuthStateChanged, doc, onSnapshot,
+  collection, query, where, getDocs, updateDoc,
 } from "./firebase-init.js";
+import { initCountdownWidget } from "./countdowns.js";
 
 export const currentUser = {
   uid: null,
@@ -21,6 +25,57 @@ export const currentUser = {
 };
 
 let profileUnsub = null;
+let cooldownCheckDone = false;
+
+// Délai (en heures) avant de pouvoir refaire la même action.
+const COOLDOWN_HOURS = {
+  "Go fast": 24,
+  "ATM": 3,
+  "Supérette": 3,
+  "Cambu": 3,
+};
+
+const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1530506907570274304/eKV0vr_Xox5mJNscu-fgdNUdFh8CMfzJQm-2HdnMTHBgj-2wCrRr6JZx6FoxuSMJmkgt";
+
+async function sendDiscordMessage(content) {
+  try {
+    await fetch(DISCORD_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+    });
+  } catch (e) {
+    console.error('Erreur webhook Discord :', e);
+  }
+}
+
+// Vérifie une seule fois par ouverture de page si un délai vient de se
+// terminer pour la personne connectée, et envoie le message Discord.
+async function checkCooldownsOnce() {
+  if (cooldownCheckDone || !currentUser.uid) return;
+  cooldownCheckDone = true;
+
+  try {
+    const snap = await getDocs(query(collection(db, 'actions'), where('uid', '==', currentUser.uid)));
+    const now = Date.now();
+
+    for (const docSnap of snap.docs) {
+      const a = docSnap.data();
+      const cooldown = COOLDOWN_HOURS[a.item];
+      if (!cooldown || a.discordNotified) continue;
+
+      const doneAt = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : 0;
+      const availableAt = doneAt + cooldown * 3600 * 1000;
+      if (now < availableAt) continue;
+
+      await updateDoc(doc(db, 'actions', docSnap.id), { discordNotified: true });
+      const who = currentUser.discordId ? `<@${currentUser.discordId}>` : `**${currentUser.username}**`;
+      await sendDiscordMessage(`✅ ${who} peut maintenant refaire un(e) **${a.item}** !`);
+    }
+  } catch (e) {
+    console.error('Erreur vérification des délais :', e);
+  }
+}
 
 function wireLogoutButtons() {
   document.querySelectorAll('[data-logout]').forEach((btn) => {
@@ -89,6 +144,8 @@ export function requireAuth() {
 
           wireLogoutButtons();
           fillPlaceholders();
+          checkCooldownsOnce();
+          initCountdownWidget(currentUser);
 
           if (firstLoad) {
             firstLoad = false;
